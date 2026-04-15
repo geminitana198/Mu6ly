@@ -14,21 +14,31 @@ const PORT = process.env.PORT || 3000;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
 
-// ── ROOMS ─────────────────────────────────────────────
-// rooms[roomId] = { id, name, tracks[], state: { trackIdx, position, playing, updatedAt }, clients: Set<ws> }
+// rooms keyed by normalized name
 const rooms = {};
 
-function getOrCreateRoom(roomId, roomName) {
-  if (!rooms[roomId]) {
-    rooms[roomId] = {
-      id: roomId,
-      name: roomName || 'Phòng nhạc',
-      tracks: [],
-      state: { trackIdx: 0, position: 0, playing: false, updatedAt: Date.now() },
-      clients: new Set()
-    };
-  }
-  return rooms[roomId];
+function normalizeRoomName(name) {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function getRoom(name) {
+  return rooms[normalizeRoomName(name)] || null;
+}
+
+function createRoom(name, pass) {
+  const key = normalizeRoomName(name);
+  if (rooms[key]) return null; // already exists
+  const room = {
+    id: uuidv4().slice(0, 8),
+    name: name.trim(),
+    key,
+    pass,
+    tracks: [],
+    state: { trackIdx: 0, position: 0, playing: false, updatedAt: Date.now() },
+    clients: new Set()
+  };
+  rooms[key] = room;
+  return room;
 }
 
 function broadcast(room, msg, exclude = null) {
@@ -65,10 +75,27 @@ wss.on('connection', (ws) => {
     switch (msg.type) {
 
       case 'join': {
-        const roomId = msg.roomId || uuidv4();
-        const room = getOrCreateRoom(roomId, msg.roomName);
+        // Host creates room, guests join by name+pass
+        let room;
+        if (msg.roomId) {
+          // Host rejoining by ID (internal use)
+          room = Object.values(rooms).find(r => r.id === msg.roomId);
+        } else {
+          room = getRoom(msg.roomName);
+        }
+
+        if (!room) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Phòng không tồn tại. Kiểm tra lại tên phòng.' }));
+          return;
+        }
+        if (room.pass !== msg.pass) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Sai mật khẩu. Vui lòng thử lại.' }));
+          return;
+        }
+
         currentRoom = room;
-        userName = msg.userName || ('Người dùng ' + Math.floor(Math.random() * 9000 + 1000));
+        userId = uuidv4();
+        userName = msg.userName || ('Khách ' + Math.floor(Math.random() * 9000 + 1000));
         room.clients.add(ws);
 
         ws.send(JSON.stringify({ type: 'joined', room: roomInfo(room), userId, userName }));
@@ -156,12 +183,11 @@ wss.on('connection', (ws) => {
       // Clean up empty rooms after 10 min
       if (currentRoom.clients.size === 0) {
         setTimeout(() => {
-          if (rooms[currentRoom.id] && rooms[currentRoom.id].clients.size === 0) {
-            // Delete uploaded files
-            rooms[currentRoom.id].tracks.forEach(t => {
+          if (currentRoom && currentRoom.clients.size === 0) {
+            currentRoom.tracks.forEach(t => {
               if (t.filePath && fs.existsSync(t.filePath)) fs.unlinkSync(t.filePath);
             });
-            delete rooms[currentRoom.id];
+            delete rooms[currentRoom.key];
           }
         }, 10 * 60 * 1000);
       }
@@ -189,21 +215,28 @@ const upload = multer({
 
 // Create room
 app.post('/api/rooms', (req, res) => {
-  const roomId = uuidv4().slice(0, 8);
-  const room = getOrCreateRoom(roomId, req.body.name || 'Phòng nhạc');
-  res.json({ roomId, roomName: room.name });
+  const { name, pass } = req.body;
+  if (!name || !pass) return res.status(400).json({ error: 'Thiếu tên phòng hoặc mật khẩu' });
+  const existing = getRoom(name);
+  if (existing) return res.status(409).json({ error: 'Tên phòng đã tồn tại, hãy chọn tên khác' });
+  const room = createRoom(name, pass);
+  res.json({ roomId: room.id, roomName: room.name });
 });
+
+function getRoomById(id) {
+  return Object.values(rooms).find(r => r.id === id) || null;
+}
 
 // Get room info
 app.get('/api/rooms/:roomId', (req, res) => {
-  const room = rooms[req.params.roomId];
+  const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
   res.json(roomInfo(room));
 });
 
 // Upload track to room
 app.post('/api/rooms/:roomId/tracks', upload.single('file'), (req, res) => {
-  const room = rooms[req.params.roomId];
+  const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
   const track = {
     id: uuidv4(),
@@ -215,14 +248,13 @@ app.post('/api/rooms/:roomId/tracks', upload.single('file'), (req, res) => {
     fileName: req.file.filename
   };
   room.tracks.push(track);
-  // Notify all clients in room
   broadcastAll(room, { type: 'track_added', track: { id: track.id, title: track.title, artist: track.artist, duration: track.duration } });
   res.json({ trackId: track.id });
 });
 
 // Stream audio
 app.get('/api/rooms/:roomId/tracks/:trackId/stream', (req, res) => {
-  const room = rooms[req.params.roomId];
+  const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).end();
   const track = room.tracks.find(t => t.id === req.params.trackId);
   if (!track || !fs.existsSync(track.filePath)) return res.status(404).end();

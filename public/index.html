@@ -199,6 +199,10 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
           <input type="text" id="l-roomname" placeholder="VD: Chill Friday Night" maxlength="40" />
         </div>
         <div class="lfield">
+          <label>Mật khẩu phòng</label>
+          <input type="password" id="l-roompass" placeholder="Đặt mật khẩu để vào phòng" maxlength="30" />
+        </div>
+        <div class="lfield">
           <label>Tên của bạn</label>
           <input type="text" id="l-username-create" placeholder="Biệt danh" maxlength="20" />
         </div>
@@ -207,8 +211,12 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
 
       <div class="ltab-body" id="ltab-join">
         <div class="lfield">
-          <label>Mã phòng</label>
-          <input type="text" id="l-roomid" placeholder="Nhập mã 8 ký tự..." maxlength="8" style="font-family:'DM Mono',monospace;letter-spacing:2px" />
+          <label>Tên phòng</label>
+          <input type="text" id="l-roomname-join" placeholder="Nhập tên phòng muốn vào" maxlength="40" />
+        </div>
+        <div class="lfield">
+          <label>Mật khẩu phòng</label>
+          <input type="password" id="l-roompass-join" placeholder="Nhập mật khẩu" maxlength="30" />
         </div>
         <div class="lfield">
           <label>Tên của bạn</label>
@@ -330,29 +338,35 @@ function swLTab(id, el) {
 }
 
 async function createRoom() {
-  const name = document.getElementById('l-roomname').value.trim() || 'Phòng nhạc';
+  const name = document.getElementById('l-roomname').value.trim();
+  const pass = document.getElementById('l-roompass').value.trim();
   const uname = document.getElementById('l-username-create').value.trim() || 'Chủ phòng';
+  if (!name) { toast('Vui lòng nhập tên phòng'); return; }
+  if (!pass) { toast('Vui lòng đặt mật khẩu cho phòng'); return; }
   try {
-    const res = await fetch('/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+    const res = await fetch('/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, pass }) });
     const data = await res.json();
+    if (data.error) { toast(data.error); return; }
     userName = uname; isHost = true;
-    connectWS(data.roomId, data.roomName, uname);
+    connectWS(data.roomId, data.roomName, uname, pass);
   } catch { toast('Không kết nối được server'); }
 }
 
 function joinRoom() {
-  const rid = document.getElementById('l-roomid').value.trim().toLowerCase();
+  const name = document.getElementById('l-roomname-join').value.trim();
+  const pass = document.getElementById('l-roompass-join').value.trim();
   const uname = document.getElementById('l-username-join').value.trim() || 'Khách';
-  if (!rid) { toast('Vui lòng nhập mã phòng'); return; }
+  if (!name) { toast('Vui lòng nhập tên phòng'); return; }
+  if (!pass) { toast('Vui lòng nhập mật khẩu'); return; }
   userName = uname; isHost = false;
-  connectWS(rid, null, uname);
+  connectWS(null, name, uname, pass);
 }
 
 // ── WEBSOCKET ─────────────────────────────────────────
-function connectWS(rid, rname, uname) {
+function connectWS(rid, rname, uname, pass) {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'join', roomId: rid, roomName: rname, userName: uname }));
+    ws.send(JSON.stringify({ type: 'join', roomId: rid, roomName: rname, userName: uname, pass }));
   };
   ws.onmessage = (e) => handleMsg(JSON.parse(e.data));
   ws.onclose = () => { toast('Mất kết nối. Tải lại trang để kết nối lại.'); };
@@ -368,6 +382,11 @@ function handleMsg(msg) {
       showApp();
       applyState(msg.room.state, true);
       if (!isHost) ws.send(JSON.stringify({ type: 'request_sync' }));
+      break;
+
+    case 'error':
+      toast('❌ ' + msg.message);
+      if (ws) { ws.close(); ws = null; }
       break;
 
     case 'track_added':
@@ -683,13 +702,7 @@ function fmt(s) { if(!s||isNaN(s))return'0:00'; return Math.floor(s/60)+':'+Stri
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
 
-// Check URL for room code (shareable link)
-const urlParams = new URLSearchParams(window.location.search);
-const prefilledRoom = urlParams.get('room');
-if (prefilledRoom) {
-  document.getElementById('l-roomid').value = prefilledRoom;
-  swLTab('join', document.querySelectorAll('.ltab')[1]);
-}
+// Init
 </script>
 </body>
 </html>
