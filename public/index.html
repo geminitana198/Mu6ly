@@ -771,7 +771,10 @@ function sendChat() {
 }
 function sendEmoji(e) { if(!ws||ws.readyState!==WebSocket.OPEN) return; ws.send(JSON.stringify({type:'chat',text:e})); addChat(userName,e,true); }
 function addChat(who, txt, self) {
-  if (!self) playChatSound();
+  if (!self) {
+    playChatSound();
+    notifyChat(who, txt);
+  }
   const el = document.getElementById('cmsgs');
   const d = document.createElement('div');
   d.className = 'cm '+(self?'self':'other');
@@ -796,30 +799,94 @@ function updateTyping() {
 }
 
 // ── UTILS ──────────────────────────────────────────────
-// ── CHAT NOTIFICATION SOUND ───────────────────────────
+// ── CHAT NOTIFICATION SOUND + BROWSER NOTIFICATION ───
 const audioCtx = typeof AudioContext !== 'undefined' ? new AudioContext() : null;
+
 function playChatSound() {
   if (!audioCtx) return;
   try {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(660, audioCtx.currentTime + 0.08);
-    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-    osc.start(audioCtx.currentTime);
-    osc.stop(audioCtx.currentTime + 0.25);
+    const t = audioCtx.currentTime;
+    // Note 1: high pop
+    const o1 = audioCtx.createOscillator();
+    const g1 = audioCtx.createGain();
+    o1.connect(g1); g1.connect(audioCtx.destination);
+    o1.type = 'triangle';
+    o1.frequency.setValueAtTime(1400, t);
+    o1.frequency.exponentialRampToValueAtTime(900, t + 0.06);
+    g1.gain.setValueAtTime(0.0001, t);
+    g1.gain.linearRampToValueAtTime(0.55, t + 0.01);
+    g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o1.start(t); o1.stop(t + 0.18);
+
+    // Note 2: lower pop (60ms later)
+    const o2 = audioCtx.createOscillator();
+    const g2 = audioCtx.createGain();
+    o2.connect(g2); g2.connect(audioCtx.destination);
+    o2.type = 'triangle';
+    o2.frequency.setValueAtTime(1050, t + 0.07);
+    o2.frequency.exponentialRampToValueAtTime(700, t + 0.13);
+    g2.gain.setValueAtTime(0.0001, t + 0.07);
+    g2.gain.linearRampToValueAtTime(0.45, t + 0.09);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    o2.start(t + 0.07); o2.stop(t + 0.28);
   } catch(e) {}
 }
+
+// ── BROWSER / TAB NOTIFICATION ────────────────────────
+let origTitle = document.title;
+let unreadCount = 0;
+let titleBlinkTimer = null;
+
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function notifyChat(who, text) {
+  // Browser Notification (when tab not focused)
+  if (document.hidden) {
+    unreadCount++;
+    // Title blink
+    clearInterval(titleBlinkTimer);
+    titleBlinkTimer = setInterval(() => {
+      document.title = document.title === origTitle
+        ? `(${unreadCount}) 💬 Tin nhắn mới`
+        : origTitle;
+    }, 1000);
+
+    // Native browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const n = new Notification('Mu6ly — ' + who, {
+        body: text.length > 60 ? text.slice(0, 60) + '…' : text,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%237f77dd"/><text x="16" y="22" font-size="18" text-anchor="middle" fill="white">♪</text></svg>',
+        tag: 'mu6ly-chat',
+        silent: true
+      });
+      n.onclick = () => { window.focus(); n.close(); };
+      setTimeout(() => n.close(), 4000);
+    }
+  }
+}
+
+// Clear unread when user comes back to tab
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    unreadCount = 0;
+    clearInterval(titleBlinkTimer);
+    document.title = origTitle;
+  }
+});
 
 function fmt(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 
-// Resume AudioContext after first interaction (required by browsers)
-document.addEventListener('click', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
+// Resume AudioContext + request notification permission on first interaction
+document.addEventListener('click', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  requestNotifPermission();
+}, { once: true });
 </script>
 </body>
 </html>
