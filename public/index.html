@@ -40,7 +40,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 
 /* ── APP ── */
 #app{display:none;flex-direction:column;flex:1}
-nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;border-bottom:1px solid var(--bd);background:var(--bg2);flex-shrink:0}
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;border-bottom:1px solid var(--bd);background:var(--bg2);flex-shrink:0;position:sticky;top:0;z-index:50}
 .logo{font-size:18px;font-weight:500;letter-spacing:-.5px}.logo em{color:var(--ac);font-style:normal}
 .room-badge{display:flex;align-items:center;gap:8px}
 .room-name-badge{font-size:13px;font-weight:500;color:var(--tx2)}
@@ -53,7 +53,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 .leave-btn{background:none;border:1px solid var(--bd);padding:4px 12px;border-radius:var(--rs);font-size:12px;color:var(--tx3);cursor:pointer;transition:all .15s}
 .leave-btn:hover{border-color:#a32d2d;color:#f09595}
 
-.layout{display:flex;flex:1;overflow:hidden}
+.layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px - 70px)}
 
 /* ── TRACK PANEL ── */
 .track-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
@@ -149,7 +149,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 .chat-send:hover{background:#6860c8}
 
 /* ── PLAYER BAR ── */
-.pbar{height:70px;background:var(--bg2);border-top:1px solid var(--bd);display:flex;align-items:center;padding:0 1.25rem;gap:1.5rem;flex-shrink:0}
+.pbar{height:70px;background:var(--bg2);border-top:1px solid var(--bd);display:flex;align-items:center;padding:0 1.25rem;gap:1.5rem;flex-shrink:0;position:sticky;bottom:0;z-index:50}
 .np{display:flex;align-items:center;gap:10px;width:190px;flex-shrink:0;min-width:0}
 .npimg{width:40px;height:40px;border-radius:var(--rs);background:var(--bg4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
 .nptl{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -247,10 +247,28 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
     <div class="track-panel">
       <div class="tp-head">
         <h2>Danh sách nhạc</h2>
-        <label class="upload-btn" id="upload-btn-wrap">
-          <span>+ Thêm nhạc</span>
-          <input type="file" accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a" multiple onchange="uploadTracks(this.files)" />
-        </label>
+        <div id="host-actions" style="display:flex;gap:6px;align-items:center">
+          <label class="upload-btn" id="upload-btn-wrap">
+            <span>+ Upload nhạc</span>
+            <input type="file" accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a" multiple onchange="uploadTracks(this.files)" />
+          </label>
+          <button class="upload-btn" onclick="showDriveImport()" style="cursor:pointer">☁️ Drive</button>
+        </div>
+      </div>
+
+      <!-- Drive import modal trigger area -->
+      <div id="drive-import-panel" style="display:none;padding:.75rem 1.25rem;border-bottom:1px solid var(--bd);background:var(--bg3)">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:8px;font-weight:500">Import từ Google Drive folder</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="drive-folder-url" placeholder="https://drive.google.com/drive/folders/..." 
+            style="flex:1;background:var(--bg4);border:1px solid var(--bd);border-radius:var(--rs);padding:7px 10px;font-size:12px;color:var(--tx);outline:none;font-family:'DM Sans',sans-serif"
+            onfocus="this.style.borderColor='var(--ac)'" onblur="this.style.borderColor='var(--bd)'" />
+          <button onclick="importDriveFolder()" style="background:var(--ac);border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap">Import</button>
+          <button onclick="document.getElementById('drive-import-panel').style.display='none'" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);padding:7px 10px;font-size:12px;color:var(--tx3);cursor:pointer">✕</button>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px;line-height:1.5">
+          Folder phải được đặt <strong style="color:var(--tx2)">Anyone with the link</strong>. File .mp3 trong folder sẽ được thêm vào hàng đợi và server tự tải về.
+        </div>
       </div>
       <div class="up-prog" id="up-prog">
         <div class="up-label" id="up-label">Đang tải...</div>
@@ -307,8 +325,8 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
       </div>
     </div>
     <div class="pvol">
-      <span class="vi">🔈</span>
-      <input type="range" class="vs" min="0" max="100" value="80" oninput="aud.volume=this.value/100" />
+      <button id="vol-icon-btn" onclick="toggleMute()" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px;color:var(--tx2)">🔈</button>
+      <input type="range" class="vs" id="vol-slider" min="0" max="100" value="80" oninput="setVol(this.value)" />
     </div>
   </div>
 </div>
@@ -408,7 +426,7 @@ function handleMsg(msg) {
       if (!isHost) { applyState(msg.state, true); }
       if (msg.state && tracks[msg.state.trackIdx]) {
         const t = tracks[msg.state.trackIdx];
-        nowPlayingMsg(t.title, t.artist);
+        updateNowPlayingChat(t.title, t.artist);
       }
       break;
     case 'sync':
@@ -460,8 +478,7 @@ function showApp() {
   document.getElementById('room-name-badge').textContent = roomName;
   document.getElementById('room-id-badge').textContent = roomId;
   if (isHost) document.getElementById('host-tag').style.display = 'inline';
-  // Only host can upload
-  if (!isHost) document.getElementById('upload-btn-wrap').style.display = 'none';
+  if (!isHost) document.getElementById('host-actions').style.display = 'none';
   render();
   sysMsg(`Bạn đã vào phòng với tên "${userName}"`);
 }
@@ -535,7 +552,7 @@ function togPlay() {
 function hostPlay(idx) {
   loadTrack(idx, true);
   if (isHost) ws.send(JSON.stringify({ type: 'next_track', trackIdx: idx }));
-  if (tracks[idx]) nowPlayingMsg(tracks[idx].title, tracks[idx].artist);
+  if (tracks[idx]) updateNowPlayingChat(tracks[idx].title, tracks[idx].artist);
 }
 
 function prevT() { if (cur > 0) hostPlay(cur - 1); }
@@ -672,8 +689,93 @@ function sysMsg(txt) {
   el.scrollTop = el.scrollHeight;
 }
 
-function nowPlayingMsg(title, artist) {
+// ── VOLUME ────────────────────────────────────────────
+let lastVol = 80;
+let muted = false;
+
+function setVol(v) {
+  aud.volume = v / 100;
+  lastVol = v > 0 ? v : lastVol;
+  muted = v == 0;
+  updateVolIcon(v);
+}
+
+function toggleMute() {
+  const slider = document.getElementById('vol-slider');
+  if (muted || parseInt(slider.value) === 0) {
+    slider.value = lastVol;
+    aud.volume = lastVol / 100;
+    muted = false;
+    updateVolIcon(lastVol);
+  } else {
+    lastVol = parseInt(slider.value);
+    slider.value = 0;
+    aud.volume = 0;
+    muted = true;
+    updateVolIcon(0);
+  }
+}
+
+function updateVolIcon(v) {
+  const btn = document.getElementById('vol-icon-btn');
+  if (!btn) return;
+  v = parseInt(v);
+  if (v === 0) btn.textContent = '🔇';
+  else if (v < 40) btn.textContent = '🔉';
+  else btn.textContent = '🔈';
+}
+
+// ── GOOGLE DRIVE FOLDER IMPORT ────────────────────────
+function showDriveImport() {
+  const p = document.getElementById('drive-import-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+async function importDriveFolder() {
+  const url = document.getElementById('drive-folder-url').value.trim();
+  if (!url) { toast('Vui lòng nhập link folder Drive'); return; }
+  const m = url.match(/folders\/([a-zA-Z0-9_-]{20,})/);
+  if (!m) { toast('Link không đúng định dạng folder Drive'); return; }
+  const folderId = m[1];
+  toast('Đang tải danh sách file từ Drive...');
+  try {
+    const res = await fetch(`/api/rooms/${roomId}/drive-import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderId })
+    });
+    const data = await res.json();
+    if (data.error) { toast('❌ ' + data.error); return; }
+    toast(`✅ Đã import ${data.count} bài từ Drive`);
+    document.getElementById('drive-import-panel').style.display = 'none';
+    document.getElementById('drive-folder-url').value = '';
+  } catch (e) {
+    toast('❌ Lỗi kết nối server');
+  }
+}
+
+// ── NOW PLAYING CHAT (single card, updates in place) ──
+let npChatCard = null;
+
+function updateNowPlayingChat(title, artist) {
   const el = document.getElementById('chat-msgs');
+  // If card exists → update content (don't add new)
+  if (npChatCard && npChatCard.parentNode === el) {
+    npChatCard.querySelector('.np-card-title').textContent = title;
+    npChatCard.querySelector('.np-card-artist').textContent = artist;
+    // Mark previous as "played"
+    el.querySelectorAll('.cmsg.nowplaying.done').forEach(c => {});
+    return;
+  }
+  // First time: mark any old ones as done (static style)
+  el.querySelectorAll('.cmsg.nowplaying:not(.done)').forEach(c => {
+    c.classList.add('done');
+    c.querySelector('.np-card-ico').style.animation = 'none';
+    c.querySelector('.np-card-ico').textContent = '✓';
+    c.querySelector('.np-card-label').textContent = 'Đã phát';
+    c.querySelector('.np-card-label').style.color = 'var(--tx3)';
+  });
+  // Create new card
   const d = document.createElement('div');
   d.className = 'cmsg nowplaying';
   d.innerHTML =
@@ -685,6 +787,7 @@ function nowPlayingMsg(title, artist) {
         '<div class="np-card-artist">' + esc(artist) + '</div>' +
       '</div>' +
     '</div>';
+  npChatCard = d;
   el.appendChild(d);
   el.scrollTop = el.scrollHeight;
 }

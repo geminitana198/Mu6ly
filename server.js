@@ -281,6 +281,85 @@ app.get('/api/rooms/:roomId/tracks/:trackId/stream', (req, res) => {
   }
 });
 
+// Import tracks from public Google Drive folder
+app.post('/api/rooms/:roomId/drive-import', async (req, res) => {
+  const room = getRoomById(req.params.roomId);
+  if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
+  const { folderId } = req.body;
+  if (!folderId) return res.status(400).json({ error: 'Thiếu folderId' });
+
+  try {
+    // Use Drive API v3 public endpoint (no API key needed for public folders)
+    const https = require('https');
+    const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType+contains+'audio'&fields=files(id,name,mimeType)&key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY`;
+
+    const fetchJson = (url) => new Promise((resolve, reject) => {
+      https.get(url, (r) => {
+        let data = '';
+        r.on('data', d => data += d);
+        r.on('end', () => { try { resolve(JSON.parse(data)); } catch { reject(new Error('Parse error')); } });
+      }).on('error', reject);
+    });
+
+    const driveData = await fetchJson(apiUrl);
+    if (driveData.error) {
+      return res.status(400).json({ error: 'Không đọc được folder. Kiểm tra folder đã public chưa, hoặc dùng Google API Key của bạn.' });
+    }
+
+    const files = (driveData.files || []).filter(f =>
+      f.mimeType.startsWith('audio/') || /\.(mp3|flac|wav|ogg|m4a)$/i.test(f.name)
+    );
+
+    if (!files.length) return res.json({ count: 0, message: 'Không tìm thấy file nhạc trong folder' });
+
+    // Download each file and add to room
+    let count = 0;
+    for (const f of files) {
+      const dlUrl = `https://drive.google.com/uc?export=download&id=${f.id}`;
+      const destPath = path.join(UPLOAD_DIR, uuidv4() + '.mp3');
+
+      try {
+        await downloadFile(dlUrl, destPath);
+        const base = f.name.replace(/\.[^/.]+$/, '');
+        const parts = base.split(/\s*[-–—]\s*/);
+        let title = base, artist = 'Chưa rõ';
+        if (parts.length >= 2) { artist = parts[0].trim(); title = parts.slice(1).join(' - ').trim(); }
+
+        const track = { id: uuidv4(), title, artist, duration: '–', size: 0, filePath: destPath, fileName: path.basename(destPath) };
+        room.tracks.push(track);
+        broadcastAll(room, { type: 'track_added', track: { id: track.id, title: track.title, artist: track.artist, duration: track.duration } });
+        count++;
+      } catch (e) {
+        console.error('Download error:', f.name, e.message);
+      }
+    }
+    res.json({ count });
+  } catch (e) {
+    res.status(500).json({ error: 'Lỗi server: ' + e.message });
+  }
+});
+
+function downloadFile(url, dest) {
+  const https = require('https');
+  const http = require('http');
+  const fs2 = require('fs');
+  return new Promise((resolve, reject) => {
+    const file = fs2.createWriteStream(dest);
+    const get = (u) => {
+      const mod = u.startsWith('https') ? https : http;
+      mod.get(u, (res) => {
+        if (res.statusCode === 301 || res.statusCode === 302) {
+          file.close(); return get(res.headers.location);
+        }
+        if (res.statusCode !== 200) { file.close(); fs2.unlink(dest, () => {}); return reject(new Error('HTTP ' + res.statusCode)); }
+        res.pipe(file);
+        file.on('finish', () => file.close(resolve));
+      }).on('error', (e) => { fs2.unlink(dest, () => {}); reject(e); });
+    };
+    get(url);
+  });
+}
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 server.listen(PORT, () => console.log(`Mu6ly chạy tại http://localhost:${PORT}`));
