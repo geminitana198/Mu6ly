@@ -71,6 +71,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .host-pill{font-size:10px;background:rgba(127,119,221,.18);color:var(--ac2);padding:2px 8px;border-radius:20px;border:1px solid var(--bd2);white-space:nowrap}
 .open-pill{font-size:10px;background:rgba(29,158,117,.15);color:#5DCAA5;padding:2px 8px;border-radius:20px;border:1px solid rgba(29,158,117,.3);white-space:nowrap}
+.del-room-btn{background:none;border:1px solid rgba(226,75,74,.4);padding:4px 12px;border-radius:var(--rs);font-size:12px;color:#f09595;cursor:pointer;transition:all .15s;white-space:nowrap}
+.del-room-btn:hover{background:rgba(226,75,74,.15);border-color:var(--red)}
 .leave-btn{background:none;border:1px solid var(--bd);padding:4px 12px;border-radius:var(--rs);font-size:12px;color:var(--tx3);cursor:pointer;transition:all .15s;white-space:nowrap}
 .leave-btn:hover{border-color:var(--red);color:#f09595}
 .layout{display:flex;flex:1;overflow:hidden;min-height:0}
@@ -146,10 +148,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 .npc{background:var(--adim);border:1px solid var(--bd2);border-radius:var(--rs);padding:8px 10px;display:flex;align-items:center;gap:8px}
 .npc-ico{font-size:18px;flex-shrink:0;animation:spin 3s linear infinite}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.npc.done .npc-ico{animation:none}
 .npc-info{min-width:0}
 .npc-lbl{font-size:10px;color:var(--ac2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
-.npc.done .npc-lbl{color:var(--tx3)}
 .npc-ttl{font-size:12px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .npc-art{font-size:11px;color:var(--tx2)}
 /* @mention dropdown */
@@ -283,6 +283,7 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
       <div class="pill"><div class="ldot"></div><span id="lcount">1</span> người nghe</div>
       <span class="host-pill" id="host-pill" style="display:none">👑 Chủ phòng</span>
       <span class="open-pill" id="open-pill" style="display:none">🎛 Mở quyền</span>
+      <button class="del-room-btn" id="del-room-btn" style="display:none" onclick="deleteRoom()">🗑 Xóa phòng</button>
       <button class="leave-btn" onclick="leaveRoom()">Rời phòng</button>
     </div>
   </nav>
@@ -544,10 +545,20 @@ function handleMsg(msg) {
       const di = tracks.findIndex(t => t.id === msg.trackId);
       if (di !== -1) {
         const dtitle = tracks[di].title;
+        const wasPlaying = di === cur;
         tracks.splice(di, 1);
         if (msg.newState) {
           cur = msg.newState.trackIdx;
           if (!msg.newState.playing && playing) { aud.pause(); playing = false; }
+          // If the deleted track was the one playing, update chat card
+          if (wasPlaying) {
+            if (tracks.length > 0 && tracks[cur]) {
+              updateNPC(tracks[cur].title, tracks[cur].artist);
+            } else {
+              // No tracks left — clear the current card
+              clearNPC();
+            }
+          }
         }
         render(); syncUI();
         sysMsg(`🗑 "${dtitle}" đã bị xóa khỏi danh sách`);
@@ -580,6 +591,13 @@ function handleMsg(msg) {
       else sysMsg(`👑 ${msg.newHost} là chủ phòng mới`);
       updateHostUI();
       renderMembers();
+      break;
+
+    case 'room_deleted':
+      // Kicked out — show lobby with message
+      if (ws) { ws.onclose = null; ws.close(); ws = null; }
+      aud.pause(); playing = false;
+      showLobby(msg.reason || 'Phòng đã bị xóa.');
       break;
 
     case 'controls_changed':
@@ -638,6 +656,8 @@ function updateHostUI() {
   document.getElementById('host-pill').style.display = isHost ? 'inline' : 'none';
   document.getElementById('hcbar').classList.toggle('show', isHost);
   document.getElementById('hact').style.display = isHost ? 'flex' : 'none';
+  const delRoomBtn = document.getElementById('del-room-btn');
+  if (delRoomBtn) delRoomBtn.style.display = isHost ? 'inline' : 'none';
   if (isHost) document.getElementById('open-ctrl-toggle').checked = openControls;
   updateControlsUI();
 }
@@ -654,6 +674,34 @@ function updateControlsUI() {
 }
 
 function leaveRoom() { if(ws) ws.close(); location.reload(); }
+
+function showLobby(msg) {
+  // Stop audio
+  aud.pause(); aud.src = ''; playing = false;
+  // Reset state
+  tracks = []; cur = -1; members = []; npCard = null;
+  roomId = null; roomName = null; isHost = false; openControls = false;
+  selectedRoomName = null;
+  // Clear chat
+  document.getElementById('cmsgs').innerHTML = '';
+  document.getElementById('tl').innerHTML = '';
+  // Switch views
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('lobby').style.display = 'flex';
+  // Show message + switch to join tab
+  if (msg) {
+    const tabs = document.querySelectorAll('.ltab');
+    swTab('join', tabs[1]);
+    setTimeout(() => toast(msg), 200);
+  }
+  loadRooms();
+}
+
+function deleteRoom() {
+  if (!isHost || !ws) return;
+  if (!confirm('Xóa phòng này? Tất cả thành viên sẽ bị đẩy ra ngoài.')) return;
+  ws.send(JSON.stringify({ type: 'delete_room' }));
+}
 
 function setOpenControls(val) {
   if (!ws) return;
@@ -865,23 +913,36 @@ function render() {
   }).join('');
 }
 
-// ── NOW PLAYING CARD (single, updates in place) ────────
+// ── NOW PLAYING (current = card, previous = plain sys text) ──
 function updateNPC(title, artist) {
   const el = document.getElementById('cmsgs');
-  if (npCard && npCard.parentNode===el) {
-    // Mark old as done
-    const old = npCard.querySelector('.npc');
-    old.classList.add('done');
-    old.querySelector('.npc-ico').textContent = '✓';
-    old.querySelector('.npc-lbl').textContent = 'Đã phát';
+  if (npCard && npCard.parentNode === el) {
+    // Convert the old card into a plain sys-style text line
+    const oldTitle = npCard.querySelector('.npc-ttl') ? npCard.querySelector('.npc-ttl').textContent : '';
+    const oldArtist = npCard.querySelector('.npc-art') ? npCard.querySelector('.npc-art').textContent : '';
+    const label = oldTitle ? `♪ ${oldTitle}${oldArtist ? ' — ' + oldArtist : ''}` : '';
+    if (label) {
+      const plain = document.createElement('div');
+      plain.className = 'cm sys';
+      plain.innerHTML = `<div class="cm-bub">${esc(label)}</div>`;
+      el.replaceChild(plain, npCard);
+    } else {
+      el.removeChild(npCard);
+    }
   }
-  // New card
+  // New live card
   const d = document.createElement('div');
   d.className = 'cm np-card-wrap';
   d.innerHTML = `<div class="npc"><div class="npc-ico">🎵</div><div class="npc-info"><div class="npc-lbl">Đang phát</div><div class="npc-ttl">${esc(title)}</div><div class="npc-art">${esc(artist)}</div></div></div>`;
   npCard = d;
   el.appendChild(d);
   el.scrollTop = el.scrollHeight;
+}
+
+function clearNPC() {
+  const el = document.getElementById('cmsgs');
+  if (npCard && npCard.parentNode === el) el.removeChild(npCard);
+  npCard = null;
 }
 
 // ── CHAT ───────────────────────────────────────────────

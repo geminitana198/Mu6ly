@@ -205,6 +205,20 @@ wss.on('connection', (ws) => {
         break;
       }
 
+      case 'delete_room': {
+        if (!room) return;
+        if (!amHost()) { ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng mới có thể xóa phòng.' })); return; }
+        // Notify all clients first, then clean up
+        broadcastAll(room, { type: 'room_deleted', reason: `Chủ phòng "${userName}" đã xóa phòng này.` });
+        // Clean up files and room
+        room.tracks.forEach(t => { if (t.filePath && fs.existsSync(t.filePath)) { try { fs.unlinkSync(t.filePath); } catch(e){} } });
+        // Remove all clients
+        room.clients.forEach(w => { w.close(); });
+        room.clients.clear();
+        delete rooms[room.key];
+        break;
+      }
+
       case 'delete_track': {
         if (!room) return;
         if (!amHost()) { ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng mới có thể xóa bài.' })); return; }
@@ -263,12 +277,15 @@ wss.on('connection', (ws) => {
       }
 
       if (currentRoom.clients.size === 0) {
+        const roomKey = currentRoom.key;
         setTimeout(() => {
-          if (currentRoom && currentRoom.clients.size === 0) {
-            currentRoom.tracks.forEach(t => { if (t.filePath && fs.existsSync(t.filePath)) fs.unlinkSync(t.filePath); });
-            delete rooms[currentRoom.key];
+          const r = rooms[roomKey];
+          if (r && r.clients.size === 0) {
+            r.tracks.forEach(t => { if (t.filePath && fs.existsSync(t.filePath)) { try { fs.unlinkSync(t.filePath); } catch(e){} } });
+            delete rooms[roomKey];
+            console.log(`Room "${r.name}" auto-deleted after 3min empty`);
           }
-        }, 10 * 60 * 1000);
+        }, 3 * 60 * 1000);
       }
     }
   });
