@@ -9,36 +9,32 @@ const fs = require('fs');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-
 const PORT = process.env.PORT || 3000;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
 
-// rooms keyed by normalized name
+// ── ROOMS ────────────────────────────────────────────────────────────────────
 const rooms = {};
+// wsInfo: Map<ws, { userId, userName, roomKey }>
+const wsInfo = new Map();
 
-function normalizeRoomName(name) {
-  return name.trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-function getRoom(name) {
-  return rooms[normalizeRoomName(name)] || null;
-}
+function normalizeRoomName(n) { return n.trim().toLowerCase().replace(/\s+/g,' '); }
+function getRoom(name) { return rooms[normalizeRoomName(name)] || null; }
+function getRoomById(id) { return Object.values(rooms).find(r => r.id === id) || null; }
 
 function createRoom(name, pass) {
   const key = normalizeRoomName(name);
-  if (rooms[key]) return null; // already exists
-  const room = {
+  if (rooms[key]) return null;
+  rooms[key] = {
     id: uuidv4().slice(0, 8),
-    name: name.trim(),
-    key,
-    pass,
+    name: name.trim(), key, pass,
+    hostName: null,       // userName of current host
+    openControls: false,  // whether non-hosts can play/pause/next
     tracks: [],
     state: { trackIdx: 0, position: 0, playing: false, updatedAt: Date.now() },
-    clients: new Set()
+    clients: new Set()    // Set<ws>
   };
-  rooms[key] = room;
-  return room;
+  return rooms[key];
 }
 
 function broadcast(room, msg, exclude = null) {
@@ -47,22 +43,29 @@ function broadcast(room, msg, exclude = null) {
     if (ws !== exclude && ws.readyState === WebSocket.OPEN) ws.send(data);
   });
 }
-
 function broadcastAll(room, msg) {
   const data = JSON.stringify(msg);
   room.clients.forEach(ws => { if (ws.readyState === WebSocket.OPEN) ws.send(data); });
 }
 
-function roomInfo(room) {
+function roomPublicInfo(room) {
+  const members = [];
+  room.clients.forEach(ws => {
+    const info = wsInfo.get(ws);
+    if (info) members.push({ userId: info.userId, userName: info.userName, isHost: info.userName === room.hostName });
+  });
   return {
     id: room.id, name: room.name,
-    tracks: room.tracks.map(t => ({ id: t.id, title: t.title, artist: t.artist, duration: t.duration, size: t.size })),
+    hostName: room.hostName,
+    openControls: room.openControls,
+    tracks: room.tracks.map(t => ({ id: t.id, title: t.title, artist: t.artist, duration: t.duration })),
     state: room.state,
-    listeners: room.clients.size
+    listeners: room.clients.size,
+    members
   };
 }
 
-// ── WEBSOCKET ─────────────────────────────────────────
+// ── WEBSOCKET ────────────────────────────────────────────────────────────────
 wss.on('connection', (ws) => {
   let currentRoom = null;
   let userId = uuidv4();
@@ -71,106 +74,104 @@ wss.on('connection', (ws) => {
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
+    const room = currentRoom;
+
+    // Helper: check if this ws is host
+    const amHost = () => room && room.hostName === userName;
+    // Check if allowed to control playback
+    const canControl = () => room && (amHost() || room.openControls);
 
     switch (msg.type) {
 
+      // ── JOIN ──────────────────────────────────────────
       case 'join': {
-        // Host creates room, guests join by name+pass
-        let room;
-        if (msg.roomId) {
-          // Host rejoining by ID (internal use)
-          room = Object.values(rooms).find(r => r.id === msg.roomId);
-        } else {
-          room = getRoom(msg.roomName);
-        }
+        let r = msg.roomId
+          ? getRoomById(msg.roomId)
+          : getRoom(msg.roomName);
 
-        if (!room) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Phòng không tồn tại. Kiểm tra lại tên phòng.' }));
-          return;
-        }
-        if (room.pass !== msg.pass) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Sai mật khẩu. Vui lòng thử lại.' }));
-          return;
-        }
+        if (!r) { ws.send(JSON.stringify({ type: 'error', message: 'Phòng không tồn tại. Kiểm tra lại tên phòng.' })); return; }
+        if (r.pass !== msg.pass) { ws.send(JSON.stringify({ type: 'error', message: 'Sai mật khẩu. Vui lòng thử lại.' })); return; }
 
-        currentRoom = room;
+        currentRoom = r;
         userId = uuidv4();
-        userName = msg.userName || ('Khách ' + Math.floor(Math.random() * 9000 + 1000));
-        room.clients.add(ws);
+        userName = (msg.userName || 'Khách').trim();
+        r.clients.add(ws);
+        wsInfo.set(ws, { userId, userName, roomKey: r.key });
 
-        ws.send(JSON.stringify({ type: 'joined', room: roomInfo(room), userId, userName }));
-        broadcast(room, { type: 'user_joined', userName, listeners: room.clients.size }, ws);
+        // First joiner becomes host; rejoining original host reclaims
+        if (!r.hostName || msg.isOriginalHost) {
+          r.hostName = userName;
+        }
+
+        ws.send(JSON.stringify({ type: 'joined', room: roomPublicInfo(r), userId, userName }));
+        broadcast(r, { type: 'user_joined', userName, listeners: r.clients.size, members: roomPublicInfo(r).members }, ws);
         break;
       }
 
-      case 'sync': {
-        // Host sends current playback state
-        if (!currentRoom) return;
-        currentRoom.state = { ...msg.state, updatedAt: Date.now() };
-        broadcast(currentRoom, { type: 'sync', state: currentRoom.state }, ws);
-        break;
-      }
-
+      // ── PLAYBACK CONTROLS (with permission check) ────
       case 'play': {
-        if (!currentRoom) return;
-        currentRoom.state.playing = true;
-        currentRoom.state.position = msg.position || 0;
-        currentRoom.state.trackIdx = msg.trackIdx ?? currentRoom.state.trackIdx;
-        currentRoom.state.updatedAt = Date.now();
-        broadcast(currentRoom, { type: 'play', state: currentRoom.state }, ws);
+        if (!room || !canControl()) { ws.send(JSON.stringify({ type: 'error', message: 'Bạn không có quyền điều khiển nhạc.' })); return; }
+        room.state = { ...room.state, playing: true, position: msg.position || 0, trackIdx: msg.trackIdx ?? room.state.trackIdx, updatedAt: Date.now() };
+        broadcast(room, { type: 'play', state: room.state }, ws);
         break;
       }
-
       case 'pause': {
-        if (!currentRoom) return;
-        currentRoom.state.playing = false;
-        currentRoom.state.position = msg.position || 0;
-        currentRoom.state.updatedAt = Date.now();
-        broadcast(currentRoom, { type: 'pause', state: currentRoom.state }, ws);
+        if (!room || !canControl()) { ws.send(JSON.stringify({ type: 'error', message: 'Bạn không có quyền điều khiển nhạc.' })); return; }
+        room.state = { ...room.state, playing: false, position: msg.position || 0, updatedAt: Date.now() };
+        broadcast(room, { type: 'pause', state: room.state }, ws);
         break;
       }
-
       case 'seek': {
-        if (!currentRoom) return;
-        currentRoom.state.position = msg.position;
-        currentRoom.state.updatedAt = Date.now();
-        broadcast(currentRoom, { type: 'seek', position: msg.position }, ws);
+        if (!room || !canControl()) return;
+        room.state = { ...room.state, position: msg.position, updatedAt: Date.now() };
+        broadcast(room, { type: 'seek', position: msg.position }, ws);
         break;
       }
-
       case 'next_track': {
-        if (!currentRoom) return;
-        currentRoom.state.trackIdx = msg.trackIdx;
-        currentRoom.state.position = 0;
-        currentRoom.state.playing = true;
-        currentRoom.state.updatedAt = Date.now();
-        broadcastAll(currentRoom, { type: 'next_track', state: currentRoom.state });
+        if (!room || !canControl()) { ws.send(JSON.stringify({ type: 'error', message: 'Bạn không có quyền chuyển bài.' })); return; }
+        room.state = { trackIdx: msg.trackIdx, position: 0, playing: true, updatedAt: Date.now() };
+        broadcastAll(room, { type: 'next_track', state: room.state });
+        break;
+      }
+      case 'sync': {
+        if (!room || !canControl()) return;
+        room.state = { ...msg.state, updatedAt: Date.now() };
+        broadcast(room, { type: 'sync', state: room.state }, ws);
         break;
       }
 
+      // ── HOST ACTIONS ──────────────────────────────────
+      case 'transfer_host': {
+        // Only current host can transfer
+        if (!room || !amHost()) { ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng mới có thể chuyển quyền.' })); return; }
+        const targetName = msg.targetUserName;
+        // Verify target is in room
+        let targetExists = false;
+        room.clients.forEach(w => { const i = wsInfo.get(w); if (i && i.userName === targetName) targetExists = true; });
+        if (!targetExists) { ws.send(JSON.stringify({ type: 'error', message: 'Người dùng không có trong phòng.' })); return; }
+        room.hostName = targetName;
+        broadcastAll(room, { type: 'host_changed', newHost: targetName, members: roomPublicInfo(room).members });
+        break;
+      }
+
+      case 'set_open_controls': {
+        if (!room || !amHost()) { ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng mới có thể thay đổi quyền.' })); return; }
+        room.openControls = !!msg.open;
+        broadcastAll(room, { type: 'controls_changed', openControls: room.openControls });
+        break;
+      }
+
+      // ── CHAT ──────────────────────────────────────────
       case 'chat': {
-        if (!currentRoom) return;
-        // Broadcast to others only — sender already shows message locally
-        broadcast(currentRoom, { type: 'chat', userName, text: msg.text, ts: Date.now() }, ws);
+        if (!room) return;
+        broadcast(room, { type: 'chat', userName, text: msg.text, ts: Date.now() }, ws);
         break;
       }
-
-      case 'typing_start': {
-        if (!currentRoom) return;
-        broadcast(currentRoom, { type: 'typing_start', userName }, ws);
-        break;
-      }
-
-      case 'typing_stop': {
-        if (!currentRoom) return;
-        broadcast(currentRoom, { type: 'typing_stop', userName }, ws);
-        break;
-      }
+      case 'typing_start': { if (room) broadcast(room, { type: 'typing_start', userName }, ws); break; }
+      case 'typing_stop':  { if (room) broadcast(room, { type: 'typing_stop',  userName }, ws); break; }
 
       case 'request_sync': {
-        // New listener asks for current state
-        if (!currentRoom) return;
-        ws.send(JSON.stringify({ type: 'sync', state: currentRoom.state }));
+        if (room) ws.send(JSON.stringify({ type: 'sync', state: room.state }));
         break;
       }
     }
@@ -179,14 +180,34 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     if (currentRoom) {
       currentRoom.clients.delete(ws);
-      broadcast(currentRoom, { type: 'user_left', userName, listeners: currentRoom.clients.size });
-      // Clean up empty rooms after 10 min
+      wsInfo.delete(ws);
+      const wasHost = currentRoom.hostName === userName;
+
+      // If host left → assign to next person in room
+      if (wasHost && currentRoom.clients.size > 0) {
+        const nextWs = [...currentRoom.clients][0];
+        const nextInfo = wsInfo.get(nextWs);
+        if (nextInfo) {
+          currentRoom.hostName = nextInfo.userName;
+          broadcastAll(currentRoom, {
+            type: 'host_changed',
+            newHost: currentRoom.hostName,
+            members: roomPublicInfo(currentRoom).members,
+            reason: `${userName} đã rời phòng, ${currentRoom.hostName} là chủ phòng mới`
+          });
+        }
+      } else {
+        broadcast(currentRoom, {
+          type: 'user_left', userName,
+          listeners: currentRoom.clients.size,
+          members: roomPublicInfo(currentRoom).members
+        });
+      }
+
       if (currentRoom.clients.size === 0) {
         setTimeout(() => {
           if (currentRoom && currentRoom.clients.size === 0) {
-            currentRoom.tracks.forEach(t => {
-              if (t.filePath && fs.existsSync(t.filePath)) fs.unlinkSync(t.filePath);
-            });
+            currentRoom.tracks.forEach(t => { if (t.filePath && fs.existsSync(t.filePath)) fs.unlinkSync(t.filePath); });
             delete rooms[currentRoom.key];
           }
         }, 10 * 60 * 1000);
@@ -195,7 +216,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-// ── REST API ──────────────────────────────────────────
+// ── REST API ──────────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
@@ -205,36 +226,27 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB per file
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('audio/') || /\.(mp3|flac|wav|ogg|m4a|aac)$/i.test(file.originalname))
-      cb(null, true);
+    if (file.mimetype.startsWith('audio/') || /\.(mp3|flac|wav|ogg|m4a|aac)$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Chỉ chấp nhận file âm thanh'));
   }
 });
 
-// Create room
 app.post('/api/rooms', (req, res) => {
   const { name, pass } = req.body;
   if (!name || !pass) return res.status(400).json({ error: 'Thiếu tên phòng hoặc mật khẩu' });
-  const existing = getRoom(name);
-  if (existing) return res.status(409).json({ error: 'Tên phòng đã tồn tại, hãy chọn tên khác' });
+  if (getRoom(name)) return res.status(409).json({ error: 'Tên phòng đã tồn tại, hãy chọn tên khác' });
   const room = createRoom(name, pass);
   res.json({ roomId: room.id, roomName: room.name });
 });
 
-function getRoomById(id) {
-  return Object.values(rooms).find(r => r.id === id) || null;
-}
-
-// Get room info
 app.get('/api/rooms/:roomId', (req, res) => {
   const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
-  res.json(roomInfo(room));
+  res.json(roomPublicInfo(room));
 });
 
-// Upload track to room
 app.post('/api/rooms/:roomId/tracks', upload.single('file'), (req, res) => {
   const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
@@ -252,28 +264,18 @@ app.post('/api/rooms/:roomId/tracks', upload.single('file'), (req, res) => {
   res.json({ trackId: track.id });
 });
 
-// Stream audio
 app.get('/api/rooms/:roomId/tracks/:trackId/stream', (req, res) => {
   const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).end();
   const track = room.tracks.find(t => t.id === req.params.trackId);
   if (!track || !fs.existsSync(track.filePath)) return res.status(404).end();
-
   const stat = fs.statSync(track.filePath);
   const fileSize = stat.size;
   const range = req.headers.range;
-
   if (range) {
-    const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
-    const start = parseInt(startStr, 10);
-    const end = endStr ? parseInt(endStr, 10) : fileSize - 1;
-    const chunkSize = end - start + 1;
-    res.writeHead(206, {
-      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': chunkSize,
-      'Content-Type': 'audio/mpeg',
-    });
+    const [s, e] = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(s, 10), end = e ? parseInt(e, 10) : fileSize - 1;
+    res.writeHead(206, { 'Content-Range': `bytes ${start}-${end}/${fileSize}`, 'Accept-Ranges': 'bytes', 'Content-Length': end - start + 1, 'Content-Type': 'audio/mpeg' });
     fs.createReadStream(track.filePath, { start, end }).pipe(res);
   } else {
     res.writeHead(200, { 'Content-Length': fileSize, 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes' });
@@ -281,85 +283,55 @@ app.get('/api/rooms/:roomId/tracks/:trackId/stream', (req, res) => {
   }
 });
 
-// Import tracks from public Google Drive folder
 app.post('/api/rooms/:roomId/drive-import', async (req, res) => {
   const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
   const { folderId } = req.body;
   if (!folderId) return res.status(400).json({ error: 'Thiếu folderId' });
-
   try {
-    // Use Drive API v3 public endpoint (no API key needed for public folders)
     const https = require('https');
     const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType+contains+'audio'&fields=files(id,name,mimeType)&key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY`;
-
     const fetchJson = (url) => new Promise((resolve, reject) => {
-      https.get(url, (r) => {
-        let data = '';
-        r.on('data', d => data += d);
-        r.on('end', () => { try { resolve(JSON.parse(data)); } catch { reject(new Error('Parse error')); } });
-      }).on('error', reject);
+      https.get(url, (r) => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>{try{resolve(JSON.parse(d))}catch{reject(new Error('parse'))}}); }).on('error',reject);
     });
-
     const driveData = await fetchJson(apiUrl);
-    if (driveData.error) {
-      return res.status(400).json({ error: 'Không đọc được folder. Kiểm tra folder đã public chưa, hoặc dùng Google API Key của bạn.' });
-    }
-
-    const files = (driveData.files || []).filter(f =>
-      f.mimeType.startsWith('audio/') || /\.(mp3|flac|wav|ogg|m4a)$/i.test(f.name)
-    );
-
-    if (!files.length) return res.json({ count: 0, message: 'Không tìm thấy file nhạc trong folder' });
-
-    // Download each file and add to room
+    if (driveData.error) return res.status(400).json({ error: 'Không đọc được folder. Kiểm tra folder đã public chưa.' });
+    const files = (driveData.files||[]).filter(f => f.mimeType.startsWith('audio/') || /\.(mp3|flac|wav|ogg|m4a)$/i.test(f.name));
+    if (!files.length) return res.json({ count: 0 });
     let count = 0;
     for (const f of files) {
-      const dlUrl = `https://drive.google.com/uc?export=download&id=${f.id}`;
       const destPath = path.join(UPLOAD_DIR, uuidv4() + '.mp3');
-
       try {
-        await downloadFile(dlUrl, destPath);
-        const base = f.name.replace(/\.[^/.]+$/, '');
+        await downloadFile(`https://drive.google.com/uc?export=download&id=${f.id}`, destPath);
+        const base = f.name.replace(/\.[^/.]+$/,'');
         const parts = base.split(/\s*[-–—]\s*/);
         let title = base, artist = 'Chưa rõ';
         if (parts.length >= 2) { artist = parts[0].trim(); title = parts.slice(1).join(' - ').trim(); }
-
         const track = { id: uuidv4(), title, artist, duration: '–', size: 0, filePath: destPath, fileName: path.basename(destPath) };
         room.tracks.push(track);
         broadcastAll(room, { type: 'track_added', track: { id: track.id, title: track.title, artist: track.artist, duration: track.duration } });
         count++;
-      } catch (e) {
-        console.error('Download error:', f.name, e.message);
-      }
+      } catch(e) { console.error('Drive download error:', f.name, e.message); }
     }
     res.json({ count });
-  } catch (e) {
-    res.status(500).json({ error: 'Lỗi server: ' + e.message });
-  }
+  } catch(e) { res.status(500).json({ error: 'Lỗi server: ' + e.message }); }
 });
 
 function downloadFile(url, dest) {
-  const https = require('https');
-  const http = require('http');
-  const fs2 = require('fs');
   return new Promise((resolve, reject) => {
-    const file = fs2.createWriteStream(dest);
+    const file = fs.createWriteStream(dest);
     const get = (u) => {
-      const mod = u.startsWith('https') ? https : http;
-      mod.get(u, (res) => {
-        if (res.statusCode === 301 || res.statusCode === 302) {
-          file.close(); return get(res.headers.location);
-        }
-        if (res.statusCode !== 200) { file.close(); fs2.unlink(dest, () => {}); return reject(new Error('HTTP ' + res.statusCode)); }
-        res.pipe(file);
+      const mod = u.startsWith('https') ? require('https') : require('http');
+      mod.get(u, (r) => {
+        if (r.statusCode === 301 || r.statusCode === 302) { file.close(); return get(r.headers.location); }
+        if (r.statusCode !== 200) { file.close(); fs.unlink(dest,()=>{}); return reject(new Error('HTTP '+r.statusCode)); }
+        r.pipe(file);
         file.on('finish', () => file.close(resolve));
-      }).on('error', (e) => { fs2.unlink(dest, () => {}); reject(e); });
+      }).on('error', (e) => { fs.unlink(dest,()=>{}); reject(e); });
     };
     get(url);
   });
 }
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
 server.listen(PORT, () => console.log(`Mu6ly chạy tại http://localhost:${PORT}`));

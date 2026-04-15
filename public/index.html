@@ -11,57 +11,75 @@
   --ac:#7f77dd;--ac2:#a89ff0;--adim:rgba(127,119,221,0.13);
   --tx:#f0eeff;--tx2:#9b95c4;--tx3:#5a5475;
   --bd:rgba(255,255,255,0.07);--bd2:rgba(127,119,221,0.3);
-  --green:#1d9e75;--r:12px;--rs:8px;
+  --green:#1d9e75;--red:#e24b4a;--amber:#ef9f27;
+  --r:12px;--rs:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column}
 
-/* ── LOBBY ── */
+/* LOBBY */
 #lobby{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
-.lobby-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);width:100%;max-width:440px;overflow:hidden}
-.lobby-head{padding:1.5rem;border-bottom:1px solid var(--bd);text-align:center}
-.lobby-logo{font-size:26px;font-weight:500;letter-spacing:-.5px;margin-bottom:4px}
-.lobby-logo em{color:var(--ac);font-style:normal}
-.lobby-sub{font-size:13px;color:var(--tx2)}
-.lobby-body{padding:1.5rem;display:flex;flex-direction:column;gap:12px}
+.lcard{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);width:100%;max-width:420px;overflow:hidden}
+.lhead{padding:1.5rem;border-bottom:1px solid var(--bd);text-align:center}
+.llogo{font-size:26px;font-weight:500;letter-spacing:-.5px;margin-bottom:4px}
+.llogo em{color:var(--ac);font-style:normal}
+.lsub{font-size:13px;color:var(--tx2)}
+.lbody{padding:1.5rem;display:flex;flex-direction:column;gap:12px}
 .ltabs{display:flex;gap:8px;margin-bottom:4px}
 .ltab{flex:1;padding:8px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;color:var(--tx3);border:1px solid var(--bd);background:none;border-radius:var(--rs);transition:all .15s}
 .ltab.on{background:var(--adim);border-color:var(--bd2);color:var(--ac2)}
-.ltab-body{display:none}.ltab-body.on{display:flex;flex-direction:column;gap:10px}
-.lfield{display:flex;flex-direction:column;gap:4px}
-.lfield label{font-size:11px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase}
-.lfield input{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px;font-size:14px;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
-.lfield input:focus{border-color:var(--ac)}
-.lfield input::placeholder{color:var(--tx3)}
+.ltbody{display:none}.ltbody.on{display:flex;flex-direction:column;gap:10px}
+.lf{display:flex;flex-direction:column;gap:4px}
+.lf label{font-size:10px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase}
+.lf input{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px;font-size:14px;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.lf input:focus{border-color:var(--ac)}.lf input::placeholder{color:var(--tx3)}
 .lbtn{background:var(--ac);border:none;border-radius:var(--rs);padding:10px;font-size:14px;font-weight:500;color:#fff;cursor:pointer;width:100%;transition:background .15s;margin-top:2px}
 .lbtn:hover{background:#6860c8}
-.ldivider{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx3)}
-.ldivider::before,.ldivider::after{content:'';flex:1;height:1px;background:var(--bd)}
 
-/* ── APP ── */
-#app{display:none;flex-direction:column;flex:1}
+/* APP */
+#app{display:none;flex-direction:column;flex:1;height:100vh;overflow:hidden}
 nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;border-bottom:1px solid var(--bd);background:var(--bg2);flex-shrink:0;position:sticky;top:0;z-index:50}
 .logo{font-size:18px;font-weight:500;letter-spacing:-.5px}.logo em{color:var(--ac);font-style:normal}
 .room-badge{display:flex;align-items:center;gap:8px}
-.room-name-badge{font-size:13px;font-weight:500;color:var(--tx2)}
-.room-id-badge{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;background:var(--bg3);padding:3px 8px;border-radius:6px;cursor:pointer;transition:color .15s}
-.room-id-badge:hover{color:var(--ac2)}
-.nav-r{display:flex;align-items:center;gap:8px}
-.listeners-badge{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);padding:3px 10px;border:1px solid var(--bd);border-radius:20px}
-.ldot2{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+.room-nm{font-size:13px;font-weight:500;color:var(--tx2)}
+.nav-r{display:flex;align-items:center;gap:6px}
+.pill{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);padding:3px 10px;border:1px solid var(--bd);border-radius:20px}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.host-pill{font-size:10px;background:rgba(127,119,221,.18);color:var(--ac2);padding:2px 8px;border-radius:20px;border:1px solid var(--bd2)}
+.open-pill{font-size:10px;background:rgba(29,158,117,.15);color:#5DCAA5;padding:2px 8px;border-radius:20px;border:1px solid rgba(29,158,117,.3)}
 .leave-btn{background:none;border:1px solid var(--bd);padding:4px 12px;border-radius:var(--rs);font-size:12px;color:var(--tx3);cursor:pointer;transition:all .15s}
-.leave-btn:hover{border-color:#a32d2d;color:#f09595}
+.leave-btn:hover{border-color:var(--red);color:#f09595}
 
 .layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px - 70px)}
 
-/* ── TRACK PANEL ── */
-.track-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.tp-head{padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
-.tp-head h2{font-size:16px;font-weight:500}
-.upload-btn{display:flex;align-items:center;gap:6px;background:var(--adim);border:1px solid var(--bd2);border-radius:var(--rs);padding:6px 12px;font-size:12px;font-weight:500;color:var(--ac2);cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
-.upload-btn:hover{background:rgba(127,119,221,0.2)}
-.upload-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+/* TRACK PANEL */
+.tpanel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.tphd{padding:.9rem 1.25rem .75rem;border-bottom:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tphd h2{font-size:15px;font-weight:500;flex-shrink:0}
+.hact{display:flex;gap:6px;align-items:center}
+.ubtn{display:flex;align-items:center;gap:5px;background:var(--adim);border:1px solid var(--bd2);border-radius:var(--rs);padding:5px 11px;font-size:12px;font-weight:500;color:var(--ac2);cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.ubtn:hover{background:rgba(127,119,221,.22)}
+.ubtn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* drive panel */
+.drive-panel{display:none;padding:.75rem 1.25rem;border-bottom:1px solid var(--bd);background:var(--bg3)}
+.drive-panel.show{display:block}
+.drive-row{display:flex;gap:8px;align-items:center;margin-top:6px}
+.drive-inp{flex:1;background:var(--bg4);border:1px solid var(--bd);border-radius:var(--rs);padding:7px 10px;font-size:12px;color:var(--tx);outline:none;font-family:'DM Sans',sans-serif;transition:border-color .15s}
+.drive-inp:focus{border-color:var(--ac)}
+.drive-go{background:var(--ac);border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap}
+.drive-go:hover{background:#6860c8}
+.drive-x{background:none;border:1px solid var(--bd);border-radius:var(--rs);padding:7px 9px;font-size:12px;color:var(--tx3);cursor:pointer}
+
+/* upload progress */
+.uprog{padding:0 .75rem .5rem;display:none}
+.uprog.show{display:block}
+.upbar{height:2px;background:var(--bg4);border-radius:1px;overflow:hidden;margin-top:4px}
+.upfill{height:100%;background:var(--ac);width:0%;transition:width .2s}
+.uplbl{font-size:11px;color:var(--tx3)}
+
+/* track list */
 .tl{flex:1;overflow-y:auto;padding:.5rem .75rem}
 .tl::-webkit-scrollbar{width:3px}.tl::-webkit-scrollbar-thumb{background:var(--bg4)}
 .ti{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;transition:background .12s;border:1px solid transparent}
@@ -83,72 +101,62 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 .emp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--tx3);padding:2rem;text-align:center}
 .eico{font-size:32px;opacity:.3}.emp h3{font-size:14px;font-weight:500;color:var(--tx2)}.emp p{font-size:12px;line-height:1.6;max-width:240px}
 
-/* upload progress */
-.up-prog{padding:0 .75rem .5rem;display:none}
-.up-prog.show{display:block}
-.up-bar{height:2px;background:var(--bg4);border-radius:1px;overflow:hidden;margin-top:4px}
-.up-fill{height:100%;background:var(--ac);width:0%;transition:width .2s}
-.up-label{font-size:11px;color:var(--tx3)}
-
-/* ── CHAT ── */
-.chat-panel{width:290px;flex-shrink:0;border-left:1px solid var(--bd);display:flex;flex-direction:column;background:var(--bg2)}
-.chat-head{padding:.75rem 1rem;border-bottom:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
-.chat-head-title{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
-.chat-online{font-size:11px;color:var(--tx3);background:var(--bg4);padding:2px 7px;border-radius:20px}
-.chat-msgs{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:6px}
-.chat-msgs::-webkit-scrollbar{width:3px}.chat-msgs::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
-
-/* bubble messages */
-.cmsg{display:flex;flex-direction:column;max-width:100%}
-.cmsg.self{align-items:flex-end}
-.cmsg.other{align-items:flex-start}
-.cmsg-meta{display:flex;align-items:baseline;gap:5px;margin-bottom:2px;padding:0 2px}
-.cmsg-who{font-size:11px;font-weight:500;color:var(--tx3)}
-.cmsg.self .cmsg-who{color:var(--ac2)}
-.cmsg-time{font-size:10px;color:var(--tx3);font-family:'DM Mono',monospace}
-.cmsg-bubble{padding:7px 11px;border-radius:14px;font-size:13px;line-height:1.45;word-break:break-word;max-width:220px}
-.cmsg.other .cmsg-bubble{background:var(--bg3);color:var(--tx);border-radius:4px 14px 14px 14px}
-.cmsg.self .cmsg-bubble{background:var(--ac);color:#fff;border-radius:14px 4px 14px 14px}
-
-/* reactions on bubble */
-.cmsg-bubble{position:relative}
-.cmsg-reactions{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
-.rxn-badge{background:var(--bg4);border:1px solid var(--bd);border-radius:20px;padding:2px 7px;font-size:12px;cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:3px}
-.rxn-badge:hover{background:var(--bg3)}
-.rxn-badge .rxn-count{font-size:11px;color:var(--tx2)}
-
-/* system messages */
-.cmsg.sys{align-items:center}
-.cmsg.sys .cmsg-bubble{background:none;color:var(--tx3);font-size:11px;font-style:italic;padding:2px 0}
-
-/* now-playing card in chat */
-.cmsg.nowplaying{align-items:stretch}
-.np-card{background:var(--adim);border:1px solid var(--bd2);border-radius:var(--rs);padding:8px 10px;display:flex;align-items:center;gap:8px}
-.np-card-ico{font-size:18px;flex-shrink:0;animation:spin 3s linear infinite}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.np-card-info{min-width:0}
-.np-card-label{font-size:10px;color:var(--ac2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
-.np-card-title{font-size:12px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.np-card-artist{font-size:11px;color:var(--tx2)}
-
-/* typing indicator */
-.typing-indicator{font-size:11px;color:var(--tx3);font-style:italic;padding:0 .75rem;height:18px;flex-shrink:0}
-.typing-dots span{animation:tdot 1.2s infinite}.typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+/* CHAT */
+.cpanel{width:280px;flex-shrink:0;border-left:1px solid var(--bd);display:flex;flex-direction:column;background:var(--bg2)}
+.chd{padding:.75rem 1rem;border-bottom:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.chd-title{font-size:13px;font-weight:500}
+.con{font-size:11px;color:var(--tx3);background:var(--bg4);padding:2px 7px;border-radius:20px}
+.cmsgs{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:6px}
+.cmsgs::-webkit-scrollbar{width:3px}.cmsgs::-webkit-scrollbar-thumb{background:var(--bg4)}
+.cm{display:flex;flex-direction:column;max-width:100%}
+.cm.self{align-items:flex-end}.cm.other{align-items:flex-start}
+.cm-meta{display:flex;align-items:baseline;gap:5px;margin-bottom:2px;padding:0 2px}
+.cm-who{font-size:11px;font-weight:500;color:var(--tx3)}.cm.self .cm-who{color:var(--ac2)}
+.cm-time{font-size:10px;color:var(--tx3);font-family:'DM Mono',monospace}
+.cm-bub{padding:7px 11px;border-radius:14px;font-size:13px;line-height:1.45;word-break:break-word;max-width:210px}
+.cm.other .cm-bub{background:var(--bg3);color:var(--tx);border-radius:4px 14px 14px 14px}
+.cm.self  .cm-bub{background:var(--ac);color:#fff;border-radius:14px 4px 14px 14px}
+.cm.sys{align-items:center}.cm.sys .cm-bub{background:none;color:var(--tx3);font-size:11px;font-style:italic;padding:2px 0}
+/* now-playing card */
+.cm.np-card-wrap{align-items:stretch}
+.npc{background:var(--adim);border:1px solid var(--bd2);border-radius:var(--rs);padding:8px 10px;display:flex;align-items:center;gap:8px}
+.npc-ico{font-size:18px;flex-shrink:0;animation:spin 3s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.npc.done .npc-ico{animation:none}
+.npc-info{min-width:0}
+.npc-lbl{font-size:10px;color:var(--ac2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
+.npc.done .npc-lbl{color:var(--tx3)}
+.npc-ttl{font-size:12px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npc-art{font-size:11px;color:var(--tx2)}
+/* typing */
+.typing-ind{font-size:11px;color:var(--tx3);font-style:italic;padding:0 .75rem;height:18px;flex-shrink:0}
+.tdots span{animation:tdot 1.2s infinite}.tdots span:nth-child(2){animation-delay:.2s}.tdots span:nth-child(3){animation-delay:.4s}
 @keyframes tdot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+/* emoji bar */
+.emobar{padding:5px .75rem;border-top:1px solid var(--bd);display:flex;gap:3px;flex-shrink:0}
+.emobtn{background:none;border:none;cursor:pointer;font-size:17px;padding:3px 4px;border-radius:6px;transition:background .12s;line-height:1}
+.emobtn:hover{background:var(--bg3)}
+.cinp-wrap{padding:.5rem .75rem .75rem;flex-shrink:0;display:flex;gap:6px}
+.cinp{flex:1;background:var(--bg3);border:1px solid var(--bd);border-radius:20px;padding:8px 12px;font-size:13px;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.cinp:focus{border-color:var(--ac)}.cinp::placeholder{color:var(--tx3)}
+.csend{background:var(--ac);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;color:#fff;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.csend:hover{background:#6860c8}
 
-/* emoji picker */
-.emoji-bar{padding:6px .75rem;border-top:1px solid var(--bd);display:flex;gap:4px;flex-shrink:0}
-.emo-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:3px 5px;border-radius:6px;transition:background .12s;line-height:1}
-.emo-btn:hover{background:var(--bg3)}
+/* MEMBERS PANEL (sidebar within chat) */
+.mpanel{border-top:1px solid var(--bd);flex-shrink:0;max-height:200px;overflow-y:auto}
+.mphd{padding:.5rem 1rem;font-size:11px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.mphd:hover{color:var(--tx2)}
+.mlist{padding:0 .75rem .5rem}
+.mitem{display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:var(--rs);font-size:13px}
+.mitem:hover .m-actions{opacity:1}
+.m-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.m-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-host-tag{font-size:10px;background:rgba(127,119,221,.2);color:var(--ac2);padding:1px 6px;border-radius:20px;border:1px solid var(--bd2);flex-shrink:0}
+.m-actions{opacity:0;transition:opacity .15s;display:flex;gap:4px;flex-shrink:0}
+.m-actbtn{background:none;border:1px solid var(--bd);border-radius:6px;padding:2px 7px;font-size:11px;color:var(--tx3);cursor:pointer;transition:all .15s;white-space:nowrap}
+.m-actbtn:hover{border-color:var(--ac);color:var(--ac2)}
 
-.chat-input-wrap{padding:.5rem .75rem .75rem;flex-shrink:0;display:flex;gap:6px}
-.chat-input{flex:1;background:var(--bg3);border:1px solid var(--bd);border-radius:20px;padding:8px 12px;font-size:13px;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
-.chat-input:focus{border-color:var(--ac)}
-.chat-input::placeholder{color:var(--tx3)}
-.chat-send{background:var(--ac);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;color:#fff;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s}
-.chat-send:hover{background:#6860c8}
-
-/* ── PLAYER BAR ── */
+/* PLAYER BAR */
 .pbar{height:70px;background:var(--bg2);border-top:1px solid var(--bd);display:flex;align-items:center;padding:0 1.25rem;gap:1.5rem;flex-shrink:0;position:sticky;bottom:0;z-index:50}
 .np{display:flex;align-items:center;gap:10px;width:190px;flex-shrink:0;min-width:0}
 .npimg{width:40px;height:40px;border-radius:var(--rs);background:var(--bg4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -157,24 +165,35 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 .pctr{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
 .ctrls{display:flex;align-items:center;gap:14px}
 .cb{background:none;border:none;cursor:pointer;color:var(--tx2);font-size:14px;padding:3px;display:flex;align-items:center;transition:color .12s}
-.cb:hover{color:var(--tx)}.cb.on{color:var(--ac)}
+.cb:hover:not(:disabled){color:var(--tx)}.cb.on{color:var(--ac)}
+.cb:disabled,.ppb:disabled{opacity:.35;cursor:not-allowed}
 .ppb{width:36px;height:36px;border-radius:50%;background:var(--ac);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;transition:background .15s}
-.ppb:hover{background:#6860c8}
+.ppb:hover:not(:disabled){background:#6860c8}
 .prow{display:flex;align-items:center;gap:8px;width:100%;max-width:400px}
 .ptm{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;min-width:32px}
 .pw{flex:1;height:4px;background:var(--bg4);border-radius:2px;cursor:pointer}
+.pw.locked{cursor:not-allowed}
 .pf{height:100%;background:var(--ac);border-radius:2px;width:0%;transition:width .2s linear;pointer-events:none}
-.pw:hover .pf{background:var(--ac2)}
-.pvol{display:flex;align-items:center;gap:6px;width:120px;justify-content:flex-end;flex-shrink:0}
-.vi{color:var(--tx2);font-size:13px}
+.pw:not(.locked):hover .pf{background:var(--ac2)}
+.pvol{display:flex;align-items:center;gap:6px;width:130px;justify-content:flex-end;flex-shrink:0}
+.vi-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px;color:var(--tx2)}
 input[type=range].vs{width:65px;-webkit-appearance:none;height:3px;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer}
 input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--tx);cursor:pointer}
 
-/* host indicator */
-.host-tag{font-size:10px;background:rgba(127,119,221,.2);color:var(--ac2);padding:2px 7px;border-radius:20px;border:1px solid var(--bd2)}
+/* HOST CONTROL BAR */
+.hcbar{display:none;align-items:center;justify-content:space-between;padding:5px 1.25rem;background:rgba(127,119,221,.07);border-bottom:1px solid var(--bd2);flex-shrink:0;gap:10px}
+.hcbar.show{display:flex}
+.hcbar-label{font-size:12px;color:var(--ac2);font-weight:500}
+.toggle-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--bg4);border-radius:20px;cursor:pointer;transition:background .2s}
+.tslider:before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:var(--tx3);border-radius:50%;transition:all .2s}
+.toggle input:checked + .tslider{background:var(--ac)}
+.toggle input:checked + .tslider:before{transform:translateX(16px);background:#fff}
 
 /* toast */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);padding:8px 16px;font-size:13px;color:var(--tx);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);padding:8px 16px;font-size:13px;color:var(--tx);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -182,46 +201,26 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
 
 <!-- LOBBY -->
 <div id="lobby">
-  <div class="lobby-card">
-    <div class="lobby-head">
-      <div class="lobby-logo">Mu<em>6ly</em></div>
-      <div class="lobby-sub">Nghe nhạc cùng nhau, cùng lúc</div>
+  <div class="lcard">
+    <div class="lhead">
+      <div class="llogo">Mu<em>6ly</em></div>
+      <div class="lsub">Nghe nhạc cùng nhau, cùng lúc</div>
     </div>
-    <div class="lobby-body">
+    <div class="lbody">
       <div class="ltabs">
-        <button class="ltab on" onclick="swLTab('create',this)">Tạo phòng</button>
-        <button class="ltab" onclick="swLTab('join',this)">Vào phòng</button>
+        <button class="ltab on" onclick="swTab('create',this)">Tạo phòng</button>
+        <button class="ltab" onclick="swTab('join',this)">Vào phòng</button>
       </div>
-
-      <div class="ltab-body on" id="ltab-create">
-        <div class="lfield">
-          <label>Tên phòng</label>
-          <input type="text" id="l-roomname" placeholder="VD: Chill Friday Night" maxlength="40" />
-        </div>
-        <div class="lfield">
-          <label>Mật khẩu phòng</label>
-          <input type="password" id="l-roompass" placeholder="Đặt mật khẩu để vào phòng" maxlength="30" />
-        </div>
-        <div class="lfield">
-          <label>Tên của bạn</label>
-          <input type="text" id="l-username-create" placeholder="Biệt danh" maxlength="20" />
-        </div>
+      <div class="ltbody on" id="lt-create">
+        <div class="lf"><label>Tên phòng</label><input type="text" id="l-rname" placeholder="VD: Chill Friday Night" maxlength="40"/></div>
+        <div class="lf"><label>Mật khẩu phòng</label><input type="password" id="l-rpass" placeholder="Đặt mật khẩu" maxlength="30"/></div>
+        <div class="lf"><label>Tên của bạn</label><input type="text" id="l-uname-c" placeholder="Biệt danh" maxlength="20"/></div>
         <button class="lbtn" onclick="createRoom()">Tạo phòng và vào</button>
       </div>
-
-      <div class="ltab-body" id="ltab-join">
-        <div class="lfield">
-          <label>Tên phòng</label>
-          <input type="text" id="l-roomname-join" placeholder="Nhập tên phòng muốn vào" maxlength="40" />
-        </div>
-        <div class="lfield">
-          <label>Mật khẩu phòng</label>
-          <input type="password" id="l-roompass-join" placeholder="Nhập mật khẩu" maxlength="30" />
-        </div>
-        <div class="lfield">
-          <label>Tên của bạn</label>
-          <input type="text" id="l-username-join" placeholder="Biệt danh" maxlength="20" />
-        </div>
+      <div class="ltbody" id="lt-join">
+        <div class="lf"><label>Tên phòng</label><input type="text" id="l-rname-j" placeholder="Tên phòng muốn vào" maxlength="40"/></div>
+        <div class="lf"><label>Mật khẩu</label><input type="password" id="l-rpass-j" placeholder="Mật khẩu phòng" maxlength="30"/></div>
+        <div class="lf"><label>Tên của bạn</label><input type="text" id="l-uname-j" placeholder="Biệt danh" maxlength="20"/></div>
         <button class="lbtn" onclick="joinRoom()">Vào phòng</button>
       </div>
     </div>
@@ -233,75 +232,93 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
   <nav>
     <div class="logo">Mu<em>6ly</em></div>
     <div class="room-badge">
-      <span class="room-name-badge" id="room-name-badge"></span>
-      <span class="room-id-badge" id="room-id-badge" onclick="copyRoomId()" title="Click để copy mã phòng"></span>
+      <span class="room-nm" id="room-nm"></span>
     </div>
     <div class="nav-r">
-      <div class="listeners-badge"><div class="ldot2"></div><span id="listener-count">1</span> người nghe</div>
-      <span class="host-tag" id="host-tag" style="display:none">Chủ phòng</span>
+      <div class="pill"><div class="ldot"></div><span id="lcount">1</span> người nghe</div>
+      <span class="host-pill" id="host-pill" style="display:none">👑 Chủ phòng</span>
+      <span class="open-pill" id="open-pill" style="display:none">🎛 Mở quyền</span>
       <button class="leave-btn" onclick="leaveRoom()">Rời phòng</button>
     </div>
   </nav>
 
+  <!-- HOST CONTROL BAR -->
+  <div class="hcbar" id="hcbar">
+    <span class="hcbar-label">👑 Quyền chủ phòng</span>
+    <label class="toggle-wrap">
+      <span>Cho thành viên điều khiển nhạc</span>
+      <label class="toggle">
+        <input type="checkbox" id="open-ctrl-toggle" onchange="setOpenControls(this.checked)" />
+        <span class="tslider"></span>
+      </label>
+    </label>
+  </div>
+
   <div class="layout">
-    <div class="track-panel">
-      <div class="tp-head">
+    <!-- TRACK PANEL -->
+    <div class="tpanel">
+      <div class="tphd">
         <h2>Danh sách nhạc</h2>
-        <div id="host-actions" style="display:flex;gap:6px;align-items:center">
-          <label class="upload-btn" id="upload-btn-wrap">
-            <span>+ Upload nhạc</span>
+        <div class="hact" id="hact" style="display:none">
+          <label class="ubtn">
+            <span>+ Upload</span>
             <input type="file" accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a" multiple onchange="uploadTracks(this.files)" />
           </label>
-          <button class="upload-btn" onclick="showDriveImport()" style="cursor:pointer">☁️ Drive</button>
+          <button class="ubtn" onclick="toggleDrive()">☁️ Drive</button>
         </div>
       </div>
 
-      <!-- Drive import modal trigger area -->
-      <div id="drive-import-panel" style="display:none;padding:.75rem 1.25rem;border-bottom:1px solid var(--bd);background:var(--bg3)">
-        <div style="font-size:12px;color:var(--tx2);margin-bottom:8px;font-weight:500">Import từ Google Drive folder</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="drive-folder-url" placeholder="https://drive.google.com/drive/folders/..." 
-            style="flex:1;background:var(--bg4);border:1px solid var(--bd);border-radius:var(--rs);padding:7px 10px;font-size:12px;color:var(--tx);outline:none;font-family:'DM Sans',sans-serif"
-            onfocus="this.style.borderColor='var(--ac)'" onblur="this.style.borderColor='var(--bd)'" />
-          <button onclick="importDriveFolder()" style="background:var(--ac);border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap">Import</button>
-          <button onclick="document.getElementById('drive-import-panel').style.display='none'" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);padding:7px 10px;font-size:12px;color:var(--tx3);cursor:pointer">✕</button>
+      <!-- Drive import -->
+      <div class="drive-panel" id="drive-panel">
+        <div style="font-size:12px;color:var(--tx2);font-weight:500">Import từ Google Drive folder</div>
+        <div class="drive-row">
+          <input class="drive-inp" type="text" id="drive-url" placeholder="https://drive.google.com/drive/folders/..." />
+          <button class="drive-go" onclick="importDrive()">Import</button>
+          <button class="drive-x" onclick="toggleDrive()">✕</button>
         </div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:6px;line-height:1.5">
-          Folder phải được đặt <strong style="color:var(--tx2)">Anyone with the link</strong>. File .mp3 trong folder sẽ được thêm vào hàng đợi và server tự tải về.
-        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px;line-height:1.5">Folder phải được đặt <strong style="color:var(--tx2)">Anyone with the link</strong>. Server sẽ tự tải file về.</div>
       </div>
-      <div class="up-prog" id="up-prog">
-        <div class="up-label" id="up-label">Đang tải...</div>
-        <div class="up-bar"><div class="up-fill" id="up-fill"></div></div>
+
+      <div class="uprog" id="uprog">
+        <div class="uplbl" id="uplbl">Đang tải...</div>
+        <div class="upbar"><div class="upfill" id="upfill"></div></div>
       </div>
       <div class="tl" id="tl"></div>
     </div>
 
-    <div class="chat-panel">
-      <div class="chat-head">
-        <div class="chat-head-title">💬 Chat phòng</div>
-        <div class="chat-online" id="chat-online">1 người</div>
+    <!-- CHAT + MEMBERS -->
+    <div class="cpanel">
+      <div class="chd">
+        <div class="chd-title">💬 Chat phòng</div>
+        <div class="con" id="chat-online">1 người</div>
       </div>
-      <div class="chat-msgs" id="chat-msgs"></div>
-      <div class="typing-indicator" id="typing-indicator"></div>
-      <div class="emoji-bar">
-        <button class="emo-btn" onclick="sendEmoji('🔥')">🔥</button>
-        <button class="emo-btn" onclick="sendEmoji('❤️')">❤️</button>
-        <button class="emo-btn" onclick="sendEmoji('🎵')">🎵</button>
-        <button class="emo-btn" onclick="sendEmoji('😂')">😂</button>
-        <button class="emo-btn" onclick="sendEmoji('👏')">👏</button>
-        <button class="emo-btn" onclick="sendEmoji('😢')">😢</button>
-        <button class="emo-btn" onclick="sendEmoji('🎉')">🎉</button>
+      <div class="cmsgs" id="cmsgs"></div>
+      <div class="typing-ind" id="typing-ind"></div>
+      <div class="emobar">
+        <button class="emobtn" onclick="sendEmoji('🔥')">🔥</button>
+        <button class="emobtn" onclick="sendEmoji('❤️')">❤️</button>
+        <button class="emobtn" onclick="sendEmoji('🎵')">🎵</button>
+        <button class="emobtn" onclick="sendEmoji('😂')">😂</button>
+        <button class="emobtn" onclick="sendEmoji('👏')">👏</button>
+        <button class="emobtn" onclick="sendEmoji('🎉')">🎉</button>
       </div>
-      <div class="chat-input-wrap">
-        <input class="chat-input" id="chat-input" type="text" placeholder="Nhắn gì đó..." maxlength="200"
-          onkeydown="if(event.key==='Enter')sendChat()"
-          oninput="onTyping()" />
-        <button class="chat-send" onclick="sendChat()">↑</button>
+      <div class="cinp-wrap">
+        <input class="cinp" id="cinp" type="text" placeholder="Nhắn gì đó..." maxlength="200"
+          onkeydown="if(event.key==='Enter')sendChat()" oninput="onTyping()" />
+        <button class="csend" onclick="sendChat()">↑</button>
+      </div>
+
+      <!-- MEMBERS LIST -->
+      <div class="mpanel" id="mpanel">
+        <div class="mphd" onclick="toggleMembers()">
+          <span>Thành viên</span><span id="m-arrow">▸</span>
+        </div>
+        <div class="mlist" id="mlist" style="display:none"></div>
       </div>
     </div>
   </div>
 
+  <!-- PLAYER BAR -->
   <div class="pbar">
     <div class="np">
       <div class="npimg">♪</div>
@@ -313,20 +330,20 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
     <div class="pctr">
       <div class="ctrls">
         <button class="cb" id="bshuf" onclick="togShuf()" title="Trộn">⇄</button>
-        <button class="cb" onclick="prevT()" title="Trước">⏮</button>
+        <button class="cb" id="bprev" onclick="prevT()" title="Trước">⏮</button>
         <button class="ppb" id="ppb" onclick="togPlay()">▶</button>
-        <button class="cb" onclick="nextT()" title="Tiếp">⏭</button>
+        <button class="cb" id="bnext" onclick="nextT()" title="Tiếp">⏭</button>
         <button class="cb" id="brep" onclick="togRep()" title="Lặp">↻</button>
       </div>
       <div class="prow">
         <span class="ptm" id="ct">0:00</span>
-        <div class="pw" onclick="seekTo(event)"><div class="pf" id="pf"></div></div>
+        <div class="pw locked" id="pw" onclick="seekTo(event)"><div class="pf" id="pf"></div></div>
         <span class="ptm" id="dt" style="text-align:right">0:00</span>
       </div>
     </div>
     <div class="pvol">
-      <button id="vol-icon-btn" onclick="toggleMute()" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px;color:var(--tx2)">🔈</button>
-      <input type="range" class="vs" id="vol-slider" min="0" max="100" value="80" oninput="setVol(this.value)" />
+      <button class="vi-btn" id="vol-btn" onclick="toggleMute()">🔈</button>
+      <input type="range" class="vs" id="vol-sl" min="0" max="100" value="80" oninput="setVol(this.value)" />
     </div>
   </div>
 </div>
@@ -337,475 +354,451 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
 <script>
 const aud = document.getElementById('aud');
 const SERVER = window.location.origin;
-const WS_URL = SERVER.replace(/^http/, 'ws');
+const WS_URL = SERVER.replace(/^http/,'ws');
 
 let ws = null;
 let roomId = null, roomName = null;
 let userId = null, userName = null;
 let isHost = false;
-let tracks = [];
+let openControls = false;
+let tracks = [], members = [];
 let cur = -1, playing = false, shuf = false, rep = false;
-let ignoreSync = false; // prevent echo loops
+let lastVol = 80, muted = false;
+let npCard = null; // current now-playing card element
+let typingTimer = null, isTyping = false;
+const typingUsers = new Set();
 
 // ── LOBBY ─────────────────────────────────────────────
-function swLTab(id, el) {
-  document.querySelectorAll('.ltab').forEach(t => t.classList.remove('on'));
-  document.querySelectorAll('.ltab-body').forEach(b => b.classList.remove('on'));
+function swTab(id, el) {
+  document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.ltbody').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
-  document.getElementById('ltab-' + id).classList.add('on');
+  document.getElementById('lt-'+id).classList.add('on');
 }
 
 async function createRoom() {
-  const name = document.getElementById('l-roomname').value.trim();
-  const pass = document.getElementById('l-roompass').value.trim();
-  const uname = document.getElementById('l-username-create').value.trim() || 'Chủ phòng';
+  const name = document.getElementById('l-rname').value.trim();
+  const pass = document.getElementById('l-rpass').value.trim();
+  const uname = document.getElementById('l-uname-c').value.trim() || 'Chủ phòng';
   if (!name) { toast('Vui lòng nhập tên phòng'); return; }
-  if (!pass) { toast('Vui lòng đặt mật khẩu cho phòng'); return; }
+  if (!pass) { toast('Vui lòng đặt mật khẩu'); return; }
   try {
-    const res = await fetch('/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, pass }) });
+    const res = await fetch('/api/rooms', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, pass}) });
     const data = await res.json();
     if (data.error) { toast(data.error); return; }
     userName = uname; isHost = true;
-    connectWS(data.roomId, data.roomName, uname, pass);
+    connectWS(data.roomId, data.roomName, uname, pass, true);
   } catch { toast('Không kết nối được server'); }
 }
 
 function joinRoom() {
-  const name = document.getElementById('l-roomname-join').value.trim();
-  const pass = document.getElementById('l-roompass-join').value.trim();
-  const uname = document.getElementById('l-username-join').value.trim() || 'Khách';
+  const name = document.getElementById('l-rname-j').value.trim();
+  const pass = document.getElementById('l-rpass-j').value.trim();
+  const uname = document.getElementById('l-uname-j').value.trim() || 'Khách';
   if (!name) { toast('Vui lòng nhập tên phòng'); return; }
   if (!pass) { toast('Vui lòng nhập mật khẩu'); return; }
   userName = uname; isHost = false;
-  connectWS(null, name, uname, pass);
+  connectWS(null, name, uname, pass, false);
 }
 
 // ── WEBSOCKET ─────────────────────────────────────────
-function connectWS(rid, rname, uname, pass) {
+function connectWS(rid, rname, uname, pass, asHost) {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'join', roomId: rid, roomName: rname, userName: uname, pass }));
+    ws.send(JSON.stringify({ type:'join', roomId:rid, roomName:rname, userName:uname, pass, isOriginalHost: asHost }));
   };
-  ws.onmessage = (e) => handleMsg(JSON.parse(e.data));
-  ws.onclose = () => { toast('Mất kết nối. Tải lại trang để kết nối lại.'); };
-  ws.onerror = () => { toast('Lỗi kết nối WebSocket'); };
+  ws.onmessage = e => handleMsg(JSON.parse(e.data));
+  ws.onclose = () => toast('Mất kết nối. Tải lại trang để vào lại.');
+  ws.onerror = () => toast('Lỗi kết nối WebSocket');
 }
 
 function handleMsg(msg) {
-  switch (msg.type) {
+  switch(msg.type) {
+
     case 'joined':
       roomId = msg.room.id; roomName = msg.room.name;
       userId = msg.userId;
       tracks = msg.room.tracks;
-      showApp();
+      openControls = msg.room.openControls;
+      members = msg.room.members || [];
+      // Determine if we're host based on server assignment
+      isHost = msg.room.hostName === msg.userName;
+      showApp(msg.room);
       applyState(msg.room.state, true);
-      if (!isHost) ws.send(JSON.stringify({ type: 'request_sync' }));
+      if (!isHost) ws.send(JSON.stringify({type:'request_sync'}));
       break;
 
     case 'error':
       toast('❌ ' + msg.message);
-      if (ws) { ws.close(); ws = null; }
+      if(ws){ws.close();ws=null;}
       break;
 
     case 'track_added':
       tracks.push(msg.track);
-      render();
-      sysMsg(`♪ "${msg.track.title}" đã được thêm vào`);
+      render(); sysMsg(`♪ "${msg.track.title}" đã được thêm`);
       break;
 
     case 'play':
-      if (!isHost) { applyState(msg.state, false); }
+      if (!isHost) applyState(msg.state, false);
       break;
     case 'pause':
-      if (!isHost) { aud.pause(); playing = false; syncUI(); }
+      if (!isHost) { aud.pause(); playing=false; syncUI(); }
       break;
     case 'seek':
-      if (!isHost) { aud.currentTime = msg.position; }
+      if (!isHost) aud.currentTime = msg.position;
       break;
     case 'next_track':
-      if (!isHost) { applyState(msg.state, true); }
-      if (msg.state && tracks[msg.state.trackIdx]) {
-        const t = tracks[msg.state.trackIdx];
-        updateNowPlayingChat(t.title, t.artist);
-      }
+      if (!isHost) applyState(msg.state, true);
+      if (msg.state && tracks[msg.state.trackIdx])
+        updateNPC(tracks[msg.state.trackIdx].title, tracks[msg.state.trackIdx].artist);
       break;
     case 'sync':
       if (!isHost) applyState(msg.state, false);
       break;
 
+    case 'host_changed':
+      isHost = msg.newHost === userName;
+      members = msg.members || members;
+      if (msg.reason) sysMsg('👑 ' + msg.reason);
+      else sysMsg(`👑 ${msg.newHost} là chủ phòng mới`);
+      updateHostUI();
+      renderMembers();
+      break;
+
+    case 'controls_changed':
+      openControls = msg.openControls;
+      updateControlsUI();
+      sysMsg(openControls ? '🎛 Chủ phòng đã mở quyền điều khiển cho mọi người' : '🔒 Chủ phòng đã khoá quyền điều khiển');
+      break;
+
     case 'user_joined':
-      document.getElementById('listener-count').textContent = msg.listeners;
+      document.getElementById('lcount').textContent = msg.listeners;
       document.getElementById('chat-online').textContent = msg.listeners + ' người';
+      members = msg.members || members;
       sysMsg(`👋 ${msg.userName} đã vào phòng`);
+      renderMembers();
       break;
     case 'user_left':
-      document.getElementById('listener-count').textContent = msg.listeners;
+      document.getElementById('lcount').textContent = msg.listeners;
+      document.getElementById('chat-online').textContent = msg.listeners + ' người';
+      members = msg.members || members;
       sysMsg(`${msg.userName} đã rời phòng`);
+      renderMembers();
       break;
 
     case 'chat':
-      // Only show messages from others (self is shown immediately on send)
-      if (!msg.self) addChatMsg(msg.userName, msg.text, false);
+      addChat(msg.userName, msg.text, false);
       break;
-    case 'typing_start':
-      typingUsers.add(msg.userName);
-      updateTypingUI();
-      break;
-    case 'typing_stop':
-      typingUsers.delete(msg.userName);
-      updateTypingUI();
-      break;
+    case 'typing_start': typingUsers.add(msg.userName); updateTyping(); break;
+    case 'typing_stop':  typingUsers.delete(msg.userName); updateTyping(); break;
   }
 }
 
 function applyState(state, changeTrack) {
   if (!state) return;
-  if (changeTrack && state.trackIdx !== cur) {
-    loadTrack(state.trackIdx, false);
-  }
+  if (changeTrack && state.trackIdx !== cur) loadTrack(state.trackIdx, false);
   const lag = (Date.now() - state.updatedAt) / 1000;
-  const targetPos = (state.position || 0) + (state.playing ? lag : 0);
-  if (Math.abs(aud.currentTime - targetPos) > 1.5) aud.currentTime = targetPos;
-  if (state.playing && aud.paused) { aud.play().catch(() => {}); playing = true; }
-  else if (!state.playing && !aud.paused) { aud.pause(); playing = false; }
+  const target = (state.position||0) + (state.playing ? lag : 0);
+  if (Math.abs(aud.currentTime - target) > 1.5) aud.currentTime = target;
+  if (state.playing && aud.paused) { aud.play().catch(()=>{}); playing=true; }
+  else if (!state.playing && !aud.paused) { aud.pause(); playing=false; }
   syncUI();
 }
 
-// ── APP UI ────────────────────────────────────────────
-function showApp() {
+// ── APP UI ─────────────────────────────────────────────
+function showApp(room) {
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('room-name-badge').textContent = roomName;
-  document.getElementById('room-id-badge').textContent = roomId;
-  if (isHost) document.getElementById('host-tag').style.display = 'inline';
-  if (!isHost) document.getElementById('host-actions').style.display = 'none';
+  document.getElementById('room-nm').textContent = room.name;
+  updateHostUI();
+  updateControlsUI();
+  renderMembers();
   render();
   sysMsg(`Bạn đã vào phòng với tên "${userName}"`);
 }
 
-function leaveRoom() {
-  if (ws) ws.close();
-  location.reload();
+function updateHostUI() {
+  document.getElementById('host-pill').style.display = isHost ? 'inline' : 'none';
+  document.getElementById('hcbar').classList.toggle('show', isHost);
+  document.getElementById('hact').style.display = isHost ? 'flex' : 'none';
+  if (isHost) document.getElementById('open-ctrl-toggle').checked = openControls;
+  updateControlsUI();
 }
 
-function copyRoomId() {
-  navigator.clipboard.writeText(roomId).then(() => toast('Đã copy mã phòng: ' + roomId));
+function updateControlsUI() {
+  const canCtrl = isHost || openControls;
+  document.getElementById('open-pill').style.display = (!isHost && openControls) ? 'inline' : 'none';
+  ['ppb','bprev','bnext','bshuf','brep'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !canCtrl;
+  });
+  const pw = document.getElementById('pw');
+  if (canCtrl) pw.classList.remove('locked'); else pw.classList.add('locked');
 }
 
-// ── UPLOAD ────────────────────────────────────────────
+function leaveRoom() { if(ws) ws.close(); location.reload(); }
+
+function setOpenControls(val) {
+  if (!ws) return;
+  ws.send(JSON.stringify({type:'set_open_controls', open: val}));
+}
+
+// ── MEMBERS ────────────────────────────────────────────
+let membersOpen = false;
+function toggleMembers() {
+  membersOpen = !membersOpen;
+  document.getElementById('mlist').style.display = membersOpen ? 'block' : 'none';
+  document.getElementById('m-arrow').textContent = membersOpen ? '▾' : '▸';
+}
+
+function renderMembers() {
+  const el = document.getElementById('mlist');
+  if (!members.length) { el.innerHTML = ''; return; }
+  el.innerHTML = members.map(m => {
+    const isMe = m.userName === userName;
+    const actBtns = isHost && !isMe && !m.isHost
+      ? `<div class="m-actions"><button class="m-actbtn" onclick="transferHost('${esc(m.userName)}')">Trao quyền</button></div>`
+      : '';
+    return `<div class="mitem">
+      <div class="m-dot"></div>
+      <div class="m-name">${esc(m.userName)}${isMe ? ' <span style="font-size:10px;color:var(--tx3)">(bạn)</span>' : ''}</div>
+      ${m.isHost ? '<span class="m-host-tag">👑</span>' : ''}
+      ${actBtns}
+    </div>`;
+  }).join('');
+}
+
+function transferHost(targetName) {
+  if (!confirm(`Chuyển quyền chủ phòng cho "${targetName}"?`)) return;
+  ws.send(JSON.stringify({type:'transfer_host', targetUserName: targetName}));
+}
+
+// ── UPLOAD ─────────────────────────────────────────────
+function toggleDrive() {
+  const p = document.getElementById('drive-panel');
+  p.classList.toggle('show');
+}
+
+async function importDrive() {
+  const url = document.getElementById('drive-url').value.trim();
+  if (!url) { toast('Vui lòng nhập link folder Drive'); return; }
+  const m = url.match(/folders\/([a-zA-Z0-9_-]{20,})/);
+  if (!m) { toast('Link không đúng định dạng'); return; }
+  toast('Đang import từ Drive...');
+  try {
+    const res = await fetch(`/api/rooms/${roomId}/drive-import`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({folderId: m[1]})
+    });
+    const data = await res.json();
+    if (data.error) { toast('❌ '+data.error); return; }
+    toast(`✅ Đã import ${data.count} bài`);
+    toggleDrive(); document.getElementById('drive-url').value='';
+  } catch { toast('❌ Lỗi kết nối server'); }
+}
+
 async function uploadTracks(files) {
   const arr = Array.from(files).filter(f => f.type.startsWith('audio/') || /\.(mp3|flac|wav|ogg|m4a)$/i.test(f.name));
   if (!arr.length) return;
-  const prog = document.getElementById('up-prog');
-  const fill = document.getElementById('up-fill');
-  const label = document.getElementById('up-label');
+  const prog = document.getElementById('uprog');
+  const fill = document.getElementById('upfill');
+  const lbl  = document.getElementById('uplbl');
   prog.classList.add('show');
-
-  for (let i = 0; i < arr.length; i++) {
+  for (let i=0; i<arr.length; i++) {
     const f = arr[i];
-    label.textContent = `Đang tải: ${f.name} (${i+1}/${arr.length})`;
-    fill.style.width = (i / arr.length * 100) + '%';
-
-    const base = f.name.replace(/\.[^/.]+$/, '');
+    lbl.textContent = `Đang tải: ${f.name} (${i+1}/${arr.length})`;
+    fill.style.width = (i/arr.length*100)+'%';
+    const base = f.name.replace(/\.[^/.]+$/,'');
     const parts = base.split(/\s*[-–—]\s*/);
-    let title = base, artist = 'Chưa rõ';
-    if (parts.length >= 2) { artist = parts[0].trim(); title = parts.slice(1).join(' - ').trim(); }
-
+    let title=base, artist='Chưa rõ';
+    if (parts.length>=2){ artist=parts[0].trim(); title=parts.slice(1).join(' - ').trim(); }
     const fd = new FormData();
-    fd.append('file', f);
-    fd.append('title', title);
-    fd.append('artist', artist);
-
-    try {
-      await fetch(`/api/rooms/${roomId}/tracks`, { method: 'POST', body: fd });
-    } catch { toast('Lỗi upload: ' + f.name); }
+    fd.append('file',f); fd.append('title',title); fd.append('artist',artist);
+    try { await fetch(`/api/rooms/${roomId}/tracks`, {method:'POST',body:fd}); }
+    catch { toast('Lỗi upload: '+f.name); }
   }
-
-  fill.style.width = '100%';
-  setTimeout(() => { prog.classList.remove('show'); fill.style.width = '0%'; }, 600);
+  fill.style.width='100%';
+  setTimeout(()=>{ prog.classList.remove('show'); fill.style.width='0%'; }, 600);
 }
 
-// ── PLAYBACK ──────────────────────────────────────────
+// ── PLAYBACK ───────────────────────────────────────────
+function canControl() { return isHost || openControls; }
+
 function loadTrack(idx, autoplay) {
-  if (idx < 0 || idx >= tracks.length) return;
+  if (idx<0 || idx>=tracks.length) return;
   cur = idx;
-  const t = tracks[idx];
-  aud.src = `${SERVER}/api/rooms/${roomId}/tracks/${t.id}/stream`;
+  aud.src = `${SERVER}/api/rooms/${roomId}/tracks/${tracks[idx].id}/stream`;
   aud.load();
-  if (autoplay) aud.play().then(() => { playing = true; syncUI(); render(); }).catch(() => {});
+  if (autoplay) aud.play().then(()=>{ playing=true; syncUI(); render(); }).catch(()=>{});
   else { syncUI(); render(); }
 }
 
 function togPlay() {
-  if (cur < 0) { if (tracks.length) hostPlay(0); return; }
+  if (!canControl()) { toast('Bạn không có quyền điều khiển nhạc'); return; }
+  if (cur<0) { if(tracks.length) hostPlay(0); return; }
   if (playing) {
-    aud.pause(); playing = false;
-    if (isHost) ws.send(JSON.stringify({ type: 'pause', position: aud.currentTime }));
+    aud.pause(); playing=false;
+    ws.send(JSON.stringify({type:'pause', position:aud.currentTime}));
   } else {
-    aud.play().catch(() => {});
-    playing = true;
-    if (isHost) ws.send(JSON.stringify({ type: 'play', position: aud.currentTime, trackIdx: cur }));
+    aud.play().catch(()=>{});
+    playing=true;
+    ws.send(JSON.stringify({type:'play', position:aud.currentTime, trackIdx:cur}));
   }
   syncUI();
 }
 
 function hostPlay(idx) {
+  if (!canControl()) { toast('Bạn không có quyền điều khiển nhạc'); return; }
   loadTrack(idx, true);
-  if (isHost) ws.send(JSON.stringify({ type: 'next_track', trackIdx: idx }));
-  if (tracks[idx]) updateNowPlayingChat(tracks[idx].title, tracks[idx].artist);
+  ws.send(JSON.stringify({type:'next_track', trackIdx:idx}));
+  if (tracks[idx]) updateNPC(tracks[idx].title, tracks[idx].artist);
 }
 
-function prevT() { if (cur > 0) hostPlay(cur - 1); }
+function prevT() { if(cur>0 && canControl()) hostPlay(cur-1); }
 function nextT() {
+  if (!canControl()) { toast('Bạn không có quyền điều khiển nhạc'); return; }
   if (!tracks.length) return;
-  const n = shuf ? Math.floor(Math.random() * tracks.length) : (cur + 1 >= tracks.length ? 0 : cur + 1);
+  const n = shuf ? Math.floor(Math.random()*tracks.length) : (cur+1>=tracks.length?0:cur+1);
   hostPlay(n);
 }
 
-function togShuf() { shuf = !shuf; document.getElementById('bshuf').classList.toggle('on', shuf); }
-function togRep()  { rep  = !rep;  document.getElementById('brep').classList.toggle('on', rep); }
+function togShuf() { if(!canControl()) return; shuf=!shuf; document.getElementById('bshuf').classList.toggle('on',shuf); }
+function togRep()  { if(!canControl()) return; rep=!rep;   document.getElementById('brep').classList.toggle('on',rep); }
 
-aud.addEventListener('ended', () => {
-  if (rep) { aud.currentTime = 0; aud.play(); }
-  else if (isHost) nextT();
-});
+aud.addEventListener('ended', ()=>{ if(rep){aud.currentTime=0;aud.play();}else if(canControl()) nextT(); });
 
-aud.addEventListener('timeupdate', () => {
-  const p = aud.duration ? aud.currentTime / aud.duration * 100 : 0;
-  document.getElementById('pf').style.width = p + '%';
+aud.addEventListener('timeupdate', ()=>{
+  const p = aud.duration ? aud.currentTime/aud.duration*100 : 0;
+  document.getElementById('pf').style.width = p+'%';
   document.getElementById('ct').textContent = fmt(aud.currentTime);
   document.getElementById('dt').textContent = fmt(aud.duration);
-  // Host broadcasts state every 5s for sync
-  if (isHost && playing && Math.round(aud.currentTime) % 5 === 0 && Math.round(aud.currentTime) !== 0) {
-    ws.send(JSON.stringify({ type: 'sync', state: { trackIdx: cur, position: aud.currentTime, playing, updatedAt: Date.now() } }));
-  }
+  if (isHost && playing && Math.round(aud.currentTime)%5===0 && Math.round(aud.currentTime)!==0)
+    ws.send(JSON.stringify({type:'sync', state:{trackIdx:cur, position:aud.currentTime, playing, updatedAt:Date.now()}}));
+});
+
+aud.addEventListener('loadedmetadata', ()=>{
+  if (cur>=0){ tracks[cur].dur = fmt(aud.duration); render(); }
 });
 
 function seekTo(e) {
-  if (!aud.duration) return;
+  if (!canControl() || !aud.duration) return;
   const r = e.currentTarget.getBoundingClientRect();
-  const pos = (e.clientX - r.left) / r.width * aud.duration;
+  const pos = (e.clientX-r.left)/r.width*aud.duration;
   aud.currentTime = pos;
-  if (isHost) ws.send(JSON.stringify({ type: 'seek', position: pos }));
+  ws.send(JSON.stringify({type:'seek', position:pos}));
 }
 
 function syncUI() {
   document.getElementById('ppb').textContent = playing ? '⏸' : '▶';
-  if (cur >= 0 && tracks[cur]) {
+  if (cur>=0 && tracks[cur]) {
     document.getElementById('nptl').textContent = tracks[cur].title;
     document.getElementById('npar').textContent = tracks[cur].artist;
   }
-  // Disable controls for non-host
-  const disabled = !isHost;
-  ['ppb','bshuf','brep'].forEach(id => document.getElementById(id).disabled = disabled);
-  document.querySelectorAll('.cb').forEach(b => b.disabled = disabled);
-  if (disabled) document.querySelector('.pw').style.cursor = 'default';
+  updateControlsUI();
 }
 
-// ── RENDER ────────────────────────────────────────────
+// ── VOLUME ─────────────────────────────────────────────
+function setVol(v) {
+  aud.volume = v/100;
+  if (v>0) lastVol=v;
+  muted = (v==0);
+  updateVolIcon(v);
+}
+function toggleMute() {
+  const sl = document.getElementById('vol-sl');
+  if (muted || parseInt(sl.value)===0) {
+    sl.value = lastVol; aud.volume=lastVol/100; muted=false; updateVolIcon(lastVol);
+  } else {
+    lastVol = parseInt(sl.value); sl.value=0; aud.volume=0; muted=true; updateVolIcon(0);
+  }
+}
+function updateVolIcon(v) {
+  const btn = document.getElementById('vol-btn');
+  btn.textContent = parseInt(v)===0 ? '🔇' : parseInt(v)<40 ? '🔉' : '🔈';
+}
+
+// ── RENDER ─────────────────────────────────────────────
 function render() {
   const el = document.getElementById('tl');
   if (!tracks.length) {
-    el.innerHTML = `<div class="emp"><div class="eico">🎵</div><h3>Chưa có bài nào</h3><p>${isHost ? 'Nhấn "+ Thêm nhạc" để upload file từ máy tính.' : 'Chờ chủ phòng thêm nhạc...'}</p></div>`;
+    el.innerHTML = `<div class="emp"><div class="eico">🎵</div><h3>Chưa có bài nào</h3><p>${isHost?'Nhấn "+ Upload" để thêm nhạc.':'Chờ chủ phòng thêm nhạc...'}</p></div>`;
     return;
   }
-  el.innerHTML = tracks.map((t, i) => {
-    const active = i === cur;
-    return `<div class="ti${active ? ' act' : ''}" onclick="${isHost ? `hostPlay(${i})` : ''}">
-      <div class="tn">${active ? '' : (i+1)}</div>
+  el.innerHTML = tracks.map((t,i)=>{
+    const active = i===cur;
+    const clickable = canControl();
+    return `<div class="ti${active?' act':''}" ${clickable?`onclick="hostPlay(${i})"`:''}>
+      <div class="tn">${active?'':(i+1)}</div>
       <div class="tth"><span class="tnote">♪</span><div class="bars"><div class="b"></div><div class="b"></div><div class="b"></div></div></div>
-      <div class="tinf">
-        <div class="ttl">${esc(t.title)}</div>
-        <div class="tar">${esc(t.artist)}</div>
-      </div>
-      <div class="tdur">${t.duration || '–'}</div>
+      <div class="tinf"><div class="ttl">${esc(t.title)}</div><div class="tar">${esc(t.artist)}</div></div>
+      <div class="tdur">${t.duration||'–'}</div>
     </div>`;
   }).join('');
 }
 
-// ── CHAT ─────────────────────────────────────────────
-let typingTimer = null;
-let isTyping = false;
-const typingUsers = new Set();
+// ── NOW PLAYING CARD (single, updates in place) ────────
+function updateNPC(title, artist) {
+  const el = document.getElementById('cmsgs');
+  if (npCard && npCard.parentNode===el) {
+    // Mark old as done
+    const old = npCard.querySelector('.npc');
+    old.classList.add('done');
+    old.querySelector('.npc-ico').textContent = '✓';
+    old.querySelector('.npc-lbl').textContent = 'Đã phát';
+  }
+  // New card
+  const d = document.createElement('div');
+  d.className = 'cm np-card-wrap';
+  d.innerHTML = `<div class="npc"><div class="npc-ico">🎵</div><div class="npc-info"><div class="npc-lbl">Đang phát</div><div class="npc-ttl">${esc(title)}</div><div class="npc-art">${esc(artist)}</div></div></div>`;
+  npCard = d;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
 
+// ── CHAT ───────────────────────────────────────────────
 function onTyping() {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  if (!isTyping) {
-    isTyping = true;
-    ws.send(JSON.stringify({ type: 'typing_start', userName }));
-  }
+  if (!ws||ws.readyState!==WebSocket.OPEN) return;
+  if (!isTyping) { isTyping=true; ws.send(JSON.stringify({type:'typing_start'})); }
   clearTimeout(typingTimer);
-  typingTimer = setTimeout(() => {
-    isTyping = false;
-    if (ws && ws.readyState === WebSocket.OPEN)
-      ws.send(JSON.stringify({ type: 'typing_stop', userName }));
-  }, 1500);
+  typingTimer = setTimeout(()=>{ isTyping=false; if(ws&&ws.readyState===WebSocket.OPEN) ws.send(JSON.stringify({type:'typing_stop'})); }, 1500);
 }
-
 function sendChat() {
-  const inp = document.getElementById('chat-input');
+  const inp = document.getElementById('cinp');
   const txt = inp.value.trim();
-  if (!txt || !ws) return;
-  ws.send(JSON.stringify({ type: 'chat', text: txt }));
-  addChatMsg(userName, txt, true);
-  inp.value = '';
-  isTyping = false;
-  clearTimeout(typingTimer);
-  if (ws.readyState === WebSocket.OPEN)
-    ws.send(JSON.stringify({ type: 'typing_stop', userName }));
+  if (!txt||!ws) return;
+  ws.send(JSON.stringify({type:'chat',text:txt}));
+  addChat(userName, txt, true);
+  inp.value=''; isTyping=false; clearTimeout(typingTimer);
+  if(ws.readyState===WebSocket.OPEN) ws.send(JSON.stringify({type:'typing_stop'}));
 }
-
-function sendEmoji(emoji) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify({ type: 'chat', text: emoji }));
-  addChatMsg(userName, emoji, true);
-}
-
-function fmtTime(ts) {
-  const d = new Date(ts);
-  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-}
-
-function addChatMsg(who, txt, self) {
-  const el = document.getElementById('chat-msgs');
+function sendEmoji(e) { if(!ws||ws.readyState!==WebSocket.OPEN) return; ws.send(JSON.stringify({type:'chat',text:e})); addChat(userName,e,true); }
+function addChat(who, txt, self) {
+  const el = document.getElementById('cmsgs');
   const d = document.createElement('div');
-  d.className = 'cmsg ' + (self ? 'self' : 'other');
-  d.innerHTML =
-    '<div class="cmsg-meta">' +
-      '<span class="cmsg-who">' + esc(who) + '</span>' +
-      '<span class="cmsg-time">' + fmtTime(Date.now()) + '</span>' +
-    '</div>' +
-    '<div class="cmsg-bubble">' + esc(txt) + '</div>';
-  el.appendChild(d);
-  el.scrollTop = el.scrollHeight;
+  d.className = 'cm '+(self?'self':'other');
+  const ts = new Date();
+  const t = ts.getHours().toString().padStart(2,'0')+':'+ts.getMinutes().toString().padStart(2,'0');
+  d.innerHTML = `<div class="cm-meta"><span class="cm-who">${esc(who)}</span><span class="cm-time">${t}</span></div><div class="cm-bub">${esc(txt)}</div>`;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
-
 function sysMsg(txt) {
-  const el = document.getElementById('chat-msgs');
+  const el = document.getElementById('cmsgs');
   const d = document.createElement('div');
-  d.className = 'cmsg sys';
-  d.innerHTML = '<div class="cmsg-bubble">' + esc(txt) + '</div>';
-  el.appendChild(d);
-  el.scrollTop = el.scrollHeight;
+  d.className='cm sys';
+  d.innerHTML=`<div class="cm-bub">${esc(txt)}</div>`;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
-
-// ── VOLUME ────────────────────────────────────────────
-let lastVol = 80;
-let muted = false;
-
-function setVol(v) {
-  aud.volume = v / 100;
-  lastVol = v > 0 ? v : lastVol;
-  muted = v == 0;
-  updateVolIcon(v);
-}
-
-function toggleMute() {
-  const slider = document.getElementById('vol-slider');
-  if (muted || parseInt(slider.value) === 0) {
-    slider.value = lastVol;
-    aud.volume = lastVol / 100;
-    muted = false;
-    updateVolIcon(lastVol);
-  } else {
-    lastVol = parseInt(slider.value);
-    slider.value = 0;
-    aud.volume = 0;
-    muted = true;
-    updateVolIcon(0);
-  }
-}
-
-function updateVolIcon(v) {
-  const btn = document.getElementById('vol-icon-btn');
-  if (!btn) return;
-  v = parseInt(v);
-  if (v === 0) btn.textContent = '🔇';
-  else if (v < 40) btn.textContent = '🔉';
-  else btn.textContent = '🔈';
-}
-
-// ── GOOGLE DRIVE FOLDER IMPORT ────────────────────────
-function showDriveImport() {
-  const p = document.getElementById('drive-import-panel');
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
-}
-
-async function importDriveFolder() {
-  const url = document.getElementById('drive-folder-url').value.trim();
-  if (!url) { toast('Vui lòng nhập link folder Drive'); return; }
-  const m = url.match(/folders\/([a-zA-Z0-9_-]{20,})/);
-  if (!m) { toast('Link không đúng định dạng folder Drive'); return; }
-  const folderId = m[1];
-  toast('Đang tải danh sách file từ Drive...');
-  try {
-    const res = await fetch(`/api/rooms/${roomId}/drive-import`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folderId })
-    });
-    const data = await res.json();
-    if (data.error) { toast('❌ ' + data.error); return; }
-    toast(`✅ Đã import ${data.count} bài từ Drive`);
-    document.getElementById('drive-import-panel').style.display = 'none';
-    document.getElementById('drive-folder-url').value = '';
-  } catch (e) {
-    toast('❌ Lỗi kết nối server');
-  }
-}
-
-// ── NOW PLAYING CHAT (single card, updates in place) ──
-let npChatCard = null;
-
-function updateNowPlayingChat(title, artist) {
-  const el = document.getElementById('chat-msgs');
-  // If card exists → update content (don't add new)
-  if (npChatCard && npChatCard.parentNode === el) {
-    npChatCard.querySelector('.np-card-title').textContent = title;
-    npChatCard.querySelector('.np-card-artist').textContent = artist;
-    // Mark previous as "played"
-    el.querySelectorAll('.cmsg.nowplaying.done').forEach(c => {});
-    return;
-  }
-  // First time: mark any old ones as done (static style)
-  el.querySelectorAll('.cmsg.nowplaying:not(.done)').forEach(c => {
-    c.classList.add('done');
-    c.querySelector('.np-card-ico').style.animation = 'none';
-    c.querySelector('.np-card-ico').textContent = '✓';
-    c.querySelector('.np-card-label').textContent = 'Đã phát';
-    c.querySelector('.np-card-label').style.color = 'var(--tx3)';
-  });
-  // Create new card
-  const d = document.createElement('div');
-  d.className = 'cmsg nowplaying';
-  d.innerHTML =
-    '<div class="np-card">' +
-      '<div class="np-card-ico">🎵</div>' +
-      '<div class="np-card-info">' +
-        '<div class="np-card-label">Đang phát</div>' +
-        '<div class="np-card-title">' + esc(title) + '</div>' +
-        '<div class="np-card-artist">' + esc(artist) + '</div>' +
-      '</div>' +
-    '</div>';
-  npChatCard = d;
-  el.appendChild(d);
-  el.scrollTop = el.scrollHeight;
-}
-
-function updateTypingUI() {
-  const el = document.getElementById('typing-indicator');
+function updateTyping() {
+  const el = document.getElementById('typing-ind');
   if (!el) return;
-  if (typingUsers.size === 0) { el.innerHTML = ''; return; }
-  const names = [...typingUsers].slice(0,2).join(', ');
-  el.innerHTML = esc(names) + ' đang gõ<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
+  if (typingUsers.size===0){el.innerHTML='';return;}
+  const names=[...typingUsers].slice(0,2).join(', ');
+  el.innerHTML=`${esc(names)} đang gõ<span class="tdots"><span>.</span><span>.</span><span>.</span></span>`;
 }
 
-// ── UTILS ─────────────────────────────────────────────
-function fmt(s) { if(!s||isNaN(s))return'0:00'; return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
-
-// Init
+// ── UTILS ──────────────────────────────────────────────
+function fmt(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 </script>
 </body>
 </html>
