@@ -28,11 +28,12 @@ function createRoom(name, pass) {
   rooms[key] = {
     id: uuidv4().slice(0, 8),
     name: name.trim(), key, pass,
-    hostName: null,       // userName of current host
-    openControls: false,  // whether non-hosts can play/pause/next
+    hostName: null,           // userName of current host
+    originalHostName: null,   // set once on first join, used for reclaim
+    openControls: false,
     tracks: [],
     state: { trackIdx: 0, position: 0, playing: false, updatedAt: Date.now() },
-    clients: new Set()    // Set<ws>
+    clients: new Set()
   };
   return rooms[key];
 }
@@ -95,16 +96,45 @@ wss.on('connection', (ws) => {
         currentRoom = r;
         userId = uuidv4();
         userName = (msg.userName || 'Khách').trim();
+
+        // Check duplicate name — allow if it's the originalHost reclaiming
+        const isOriginalHostReclaim = userName === r.originalHostName;
+        if (!isOriginalHostReclaim) {
+          const nameInUse = [...r.clients].some(w => {
+            const info = wsInfo.get(w);
+            return info && info.userName.toLowerCase() === userName.toLowerCase();
+          });
+          if (nameInUse) {
+            ws.send(JSON.stringify({ type: 'error', message: `Tên "${userName}" đã có người dùng trong phòng. Vui lòng chọn tên khác.` }));
+            return;
+          }
+        }
+
         r.clients.add(ws);
         wsInfo.set(ws, { userId, userName, roomKey: r.key });
 
-        // First joiner becomes host; rejoining original host reclaims
-        if (!r.hostName || msg.isOriginalHost) {
+        // First joiner: become host and lock in as originalHost
+        if (!r.originalHostName) {
+          r.originalHostName = userName;
           r.hostName = userName;
+        } else if (userName === r.originalHostName) {
+          // Original host rejoining → reclaim immediately
+          const prevHost = r.hostName;
+          r.hostName = userName;
+          if (prevHost !== userName) {
+            // notify room the original host reclaimed
+            broadcast(r, {
+              type: 'host_changed',
+              newHost: userName,
+              members: roomPublicInfo(r).members,
+              reason: `👑 ${userName} (chủ phòng gốc) đã vào lại và lấy lại quyền`
+            }, ws);
+          }
         }
 
-        ws.send(JSON.stringify({ type: 'joined', room: roomPublicInfo(r), userId, userName }));
-        broadcast(r, { type: 'user_joined', userName, listeners: r.clients.size, members: roomPublicInfo(r).members }, ws);
+        const info = roomPublicInfo(r);
+        ws.send(JSON.stringify({ type: 'joined', room: info, userId, userName }));
+        broadcast(r, { type: 'user_joined', userName, listeners: r.clients.size, members: info.members }, ws);
         break;
       }
 
@@ -172,6 +202,34 @@ wss.on('connection', (ws) => {
 
       case 'request_sync': {
         if (room) ws.send(JSON.stringify({ type: 'sync', state: room.state }));
+        break;
+      }
+
+      case 'delete_track': {
+        if (!room) return;
+        if (!amHost()) { ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng mới có thể xóa bài.' })); return; }
+        const tidx = room.tracks.findIndex(t => t.id === msg.trackId);
+        if (tidx === -1) return;
+        const [removed] = room.tracks.splice(tidx, 1);
+        // delete file from disk
+        if (removed.filePath && fs.existsSync(removed.filePath)) {
+          try { fs.unlinkSync(removed.filePath); } catch(e) {}
+        }
+        // adjust current playing index if needed
+        let newState = { ...room.state };
+        if (room.state.trackIdx === tidx) {
+          // deleted the currently playing track
+          newState.trackIdx = Math.min(tidx, room.tracks.length - 1);
+          newState.playing = false;
+          newState.position = 0;
+          newState.updatedAt = Date.now();
+          room.state = newState;
+        } else if (room.state.trackIdx > tidx) {
+          newState.trackIdx = room.state.trackIdx - 1;
+          newState.updatedAt = Date.now();
+          room.state = newState;
+        }
+        broadcastAll(room, { type: 'track_deleted', trackId: msg.trackId, newState: room.state });
         break;
       }
     }
@@ -332,6 +390,22 @@ function downloadFile(url, dest) {
     get(url);
   });
 }
+
+// List active rooms (no sensitive info — no pass, no file paths)
+app.get('/api/rooms', (req, res) => {
+  const list = Object.values(rooms).map(r => ({
+    id: r.id,
+    name: r.name,
+    listeners: r.clients.size,
+    trackCount: r.tracks.length,
+    hasMusic: r.tracks.length > 0,
+    nowPlaying: r.tracks[r.state.trackIdx]
+      ? { title: r.tracks[r.state.trackIdx].title, artist: r.tracks[r.state.trackIdx].artist }
+      : null,
+    playing: r.state.playing
+  }));
+  res.json(list);
+});
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 server.listen(PORT, () => console.log(`Mu6ly chạy tại http://localhost:${PORT}`));

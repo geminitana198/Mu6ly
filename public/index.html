@@ -35,6 +35,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .lf input:focus{border-color:var(--ac)}.lf input::placeholder{color:var(--tx3)}
 .lbtn{background:var(--ac);border:none;border-radius:var(--rs);padding:10px;font-size:14px;font-weight:500;color:#fff;cursor:pointer;width:100%;transition:background .15s;margin-top:2px}
 .lbtn:hover{background:#6860c8}
+/* room list in join tab */
+.room-list-wrap{display:flex;flex-direction:column;gap:6px}
+.room-list-label{font-size:10px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+.room-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto;padding-right:2px}
+.room-list::-webkit-scrollbar{width:3px}.room-list::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+.room-card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px}
+.room-card:hover{border-color:var(--bd2);background:var(--adim)}
+.room-card.selected{border-color:var(--ac);background:var(--adim)}
+.rc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px}
+.rc-dot.live{background:var(--green);animation:blink 2s infinite}
+.rc-dot.idle{background:var(--tx3)}
+.rc-info{flex:1;min-width:0}
+.rc-name{font-size:13px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-sub{font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.rc-sub .rc-song{color:var(--ac2)}
+.rc-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.rc-listeners{font-size:11px;color:var(--tx3);white-space:nowrap}
+.rc-empty{text-align:center;padding:1.5rem 1rem;color:var(--tx3);font-size:13px}
+.rc-refresh{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:14px;padding:2px 4px;border-radius:4px;transition:color .15s;line-height:1}
+.rc-refresh:hover{color:var(--ac2)}
+.rc-loading{text-align:center;padding:1rem;color:var(--tx3);font-size:12px}
+.rc-err{text-align:center;padding:.75rem;color:#f09595;font-size:12px}
+.lbtn:hover{background:#6860c8}
 
 /* APP — fixed full-viewport, only .tl and .cmsgs scroll */
 #app{display:none;flex-direction:column;position:fixed;inset:0;overflow:hidden}
@@ -97,6 +120,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 .ti.act .ttl{color:var(--ac2)}
 .tar{font-size:12px;color:var(--tx2)}
 .tdur{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;flex-shrink:0}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:3px 6px;border-radius:5px;opacity:0;transition:all .15s;flex-shrink:0;line-height:1}
+.ti:hover .del-btn{opacity:1}.del-btn:hover{color:var(--red);background:rgba(226,75,74,.12)}
 .emp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--tx3);padding:2rem;text-align:center}
 .eico{font-size:32px;opacity:.3}.emp h3{font-size:14px;font-weight:500;color:var(--tx2)}.emp p{font-size:12px;line-height:1.6;max-width:240px}
 
@@ -127,6 +152,20 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25
 .npc.done .npc-lbl{color:var(--tx3)}
 .npc-ttl{font-size:12px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .npc-art{font-size:11px;color:var(--tx2)}
+/* @mention dropdown */
+.mention-drop{position:absolute;bottom:100%;left:0;right:0;margin-bottom:4px;background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--rs);overflow:hidden;z-index:100;display:none;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
+.mention-drop.show{display:block}
+.mention-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;transition:background .12s;font-size:13px}
+.mention-item:hover,.mention-item.sel{background:var(--adim)}
+.mention-item .m-av{width:22px;height:22px;border-radius:50%;background:var(--ac);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#fff;flex-shrink:0}
+.mention-item .m-nm{color:var(--tx);font-weight:500}
+.mention-item .m-tag{font-size:10px;color:var(--ac2);margin-left:2px}
+/* @mention highlight in message bubble */
+.mention-tag{background:rgba(127,119,221,.25);color:var(--ac2);border-radius:4px;padding:0 3px;font-weight:500}
+.cm.self .mention-tag{background:rgba(255,255,255,.25);color:#fff}
+/* highlight when tagged = you */
+.cm.tagged .cm-bub{background:rgba(127,119,221,.12);border:1px solid var(--bd2)}
+.cm.self.tagged .cm-bub{background:var(--ac)}
 /* typing */
 .typing-ind{font-size:11px;color:var(--tx3);font-style:italic;padding:0 .75rem;height:18px;flex-shrink:0}
 .tdots span{animation:tdot 1.2s infinite}.tdots span:nth-child(2){animation-delay:.2s}.tdots span:nth-child(3){animation-delay:.4s}
@@ -217,7 +256,14 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
         <button class="lbtn" onclick="createRoom()">Tạo phòng và vào</button>
       </div>
       <div class="ltbody" id="lt-join">
-        <div class="lf"><label>Tên phòng</label><input type="text" id="l-rname-j" placeholder="Tên phòng muốn vào" maxlength="40"/></div>
+        <!-- Room picker -->
+        <div class="room-list-wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="room-list-label">Phòng đang hoạt động</span>
+            <button class="rc-refresh" onclick="loadRooms()" title="Làm mới">↻</button>
+          </div>
+          <div class="room-list" id="room-list"><div class="rc-loading">Đang tải...</div></div>
+        </div>
         <div class="lf"><label>Mật khẩu</label><input type="password" id="l-rpass-j" placeholder="Mật khẩu phòng" maxlength="30"/></div>
         <div class="lf"><label>Tên của bạn</label><input type="text" id="l-uname-j" placeholder="Biệt danh" maxlength="20"/></div>
         <button class="lbtn" onclick="joinRoom()">Vào phòng</button>
@@ -301,10 +347,13 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
         <button class="emobtn" onclick="sendEmoji('👏')">👏</button>
         <button class="emobtn" onclick="sendEmoji('🎉')">🎉</button>
       </div>
-      <div class="cinp-wrap">
-        <input class="cinp" id="cinp" type="text" placeholder="Nhắn gì đó..." maxlength="200"
-          onkeydown="if(event.key==='Enter')sendChat()" oninput="onTyping()" />
-        <button class="csend" onclick="sendChat()">↑</button>
+      <div style="position:relative;flex-shrink:0">
+        <div class="mention-drop" id="mention-drop"></div>
+        <div class="cinp-wrap">
+          <input class="cinp" id="cinp" type="text" placeholder="Nhắn gì đó... (@ để tag)" maxlength="200"
+            onkeydown="onCinpKeydown(event)" oninput="onCinpInput(event)" />
+          <button class="csend" onclick="sendChat()">↑</button>
+        </div>
       </div>
 
       <!-- MEMBERS LIST -->
@@ -373,6 +422,7 @@ function swTab(id, el) {
   document.querySelectorAll('.ltbody').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('lt-'+id).classList.add('on');
+  if (id === 'join') loadRooms();
 }
 
 async function createRoom() {
@@ -386,25 +436,76 @@ async function createRoom() {
     const data = await res.json();
     if (data.error) { toast(data.error); return; }
     userName = uname; isHost = true;
-    connectWS(data.roomId, data.roomName, uname, pass, true);
+    connectWS(data.roomId, data.roomName, uname, pass);
   } catch { toast('Không kết nối được server'); }
 }
 
+// ── ROOM LIST ──────────────────────────────────────────
+let selectedRoomName = null;
+
+async function loadRooms() {
+  const el = document.getElementById('room-list');
+  if (!el) return;
+  el.innerHTML = '<div class="rc-loading">Đang tải...</div>';
+  try {
+    const res = await fetch('/api/rooms');
+    const rooms = await res.json();
+    renderRoomList(rooms);
+  } catch {
+    el.innerHTML = '<div class="rc-err">Không tải được danh sách phòng</div>';
+  }
+}
+
+function renderRoomList(rooms) {
+  const el = document.getElementById('room-list');
+  if (!rooms.length) {
+    el.innerHTML = '<div class="rc-empty">Chưa có phòng nào đang hoạt động</div>';
+    return;
+  }
+  el.innerHTML = rooms.map(r => {
+    const isPlaying = r.playing && r.nowPlaying;
+    const sub = isPlaying
+      ? `<span class="rc-song">♪ ${esc(r.nowPlaying.title)}</span> — ${esc(r.nowPlaying.artist)}`
+      : r.trackCount > 0 ? `${r.trackCount} bài · Đang dừng` : 'Chưa có nhạc';
+    const dotClass = isPlaying ? 'live' : 'idle';
+    const sel = selectedRoomName === r.name ? ' selected' : '';
+    return `<div class="room-card${sel}" onclick="selectRoom('${esc(r.name)}')" data-name="${esc(r.name)}">
+      <div class="rc-dot ${dotClass}"></div>
+      <div class="rc-info">
+        <div class="rc-name">${esc(r.name)}</div>
+        <div class="rc-sub">${sub}</div>
+      </div>
+      <div class="rc-meta">
+        <span class="rc-listeners">${r.listeners} 👤</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectRoom(name) {
+  selectedRoomName = name;
+  // Update selected style
+  document.querySelectorAll('.room-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.name === name);
+  });
+  // Auto-focus password field
+  document.getElementById('l-rpass-j').focus();
+}
+
 function joinRoom() {
-  const name = document.getElementById('l-rname-j').value.trim();
+  if (!selectedRoomName) { toast('Vui lòng chọn một phòng từ danh sách'); return; }
   const pass = document.getElementById('l-rpass-j').value.trim();
   const uname = document.getElementById('l-uname-j').value.trim() || 'Khách';
-  if (!name) { toast('Vui lòng nhập tên phòng'); return; }
   if (!pass) { toast('Vui lòng nhập mật khẩu'); return; }
   userName = uname; isHost = false;
-  connectWS(null, name, uname, pass, false);
+  connectWS(null, selectedRoomName, uname, pass);
 }
 
 // ── WEBSOCKET ─────────────────────────────────────────
-function connectWS(rid, rname, uname, pass, asHost) {
+function connectWS(rid, rname, uname, pass) {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
-    ws.send(JSON.stringify({ type:'join', roomId:rid, roomName:rname, userName:uname, pass, isOriginalHost: asHost }));
+    ws.send(JSON.stringify({ type:'join', roomId:rid, roomName:rname, userName:uname, pass }));
   };
   ws.onmessage = e => handleMsg(JSON.parse(e.data));
   ws.onclose = () => toast('Mất kết nối. Tải lại trang để vào lại.');
@@ -420,9 +521,11 @@ function handleMsg(msg) {
       tracks = msg.room.tracks;
       openControls = msg.room.openControls;
       members = msg.room.members || [];
-      // Determine if we're host based on server assignment
       isHost = msg.room.hostName === msg.userName;
       showApp(msg.room);
+      // Update listener count immediately from room info
+      document.getElementById('lcount').textContent = msg.room.listeners;
+      document.getElementById('chat-online').textContent = msg.room.listeners + ' người';
       applyState(msg.room.state, true);
       if (!isHost) ws.send(JSON.stringify({type:'request_sync'}));
       break;
@@ -436,6 +539,21 @@ function handleMsg(msg) {
       tracks.push(msg.track);
       render(); sysMsg(`♪ "${msg.track.title}" đã được thêm`);
       break;
+
+    case 'track_deleted': {
+      const di = tracks.findIndex(t => t.id === msg.trackId);
+      if (di !== -1) {
+        const dtitle = tracks[di].title;
+        tracks.splice(di, 1);
+        if (msg.newState) {
+          cur = msg.newState.trackIdx;
+          if (!msg.newState.playing && playing) { aud.pause(); playing = false; }
+        }
+        render(); syncUI();
+        sysMsg(`🗑 "${dtitle}" đã bị xóa khỏi danh sách`);
+      }
+      break;
+    }
 
     case 'play':
       if (!isHost) applyState(msg.state, false);
@@ -715,6 +833,15 @@ function updateVolIcon(v) {
   btn.textContent = parseInt(v)===0 ? '🔇' : parseInt(v)<40 ? '🔉' : '🔈';
 }
 
+// ── DELETE TRACK ───────────────────────────────────────
+function deleteTrack(trackId) {
+  if (!isHost) return;
+  const t = tracks.find(t => t.id === trackId);
+  if (!t) return;
+  if (!confirm(`Xóa "${t.title}" khỏi danh sách?`)) return;
+  ws.send(JSON.stringify({ type: 'delete_track', trackId }));
+}
+
 // ── RENDER ─────────────────────────────────────────────
 function render() {
   const el = document.getElementById('tl');
@@ -725,11 +852,15 @@ function render() {
   el.innerHTML = tracks.map((t,i)=>{
     const active = i===cur;
     const clickable = canControl();
+    const delBtn = isHost
+      ? `<button class="del-btn" onclick="event.stopPropagation();deleteTrack('${t.id}')" title="Xóa bài">✕</button>`
+      : '';
     return `<div class="ti${active?' act':''}" ${clickable?`onclick="hostPlay(${i})"`:''}>
       <div class="tn">${active?'':(i+1)}</div>
       <div class="tth"><span class="tnote">♪</span><div class="bars"><div class="b"></div><div class="b"></div><div class="b"></div></div></div>
       <div class="tinf"><div class="ttl">${esc(t.title)}</div><div class="tar">${esc(t.artist)}</div></div>
       <div class="tdur">${t.duration||'–'}</div>
+      ${delBtn}
     </div>`;
   }).join('');
 }
@@ -754,6 +885,101 @@ function updateNPC(title, artist) {
 }
 
 // ── CHAT ───────────────────────────────────────────────
+// ── @ MENTION DROPDOWN ────────────────────────────────
+let mentionSelIdx = -1;
+let mentionQuery = null; // null = not in mention mode
+
+function getMentionCandidates(query) {
+  return members
+    .filter(m => m.userName !== userName) // exclude self
+    .filter(m => m.userName.toLowerCase().startsWith(query.toLowerCase()));
+}
+
+function getCursorMentionQuery(inp) {
+  const val = inp.value;
+  const pos = inp.selectionStart;
+  // Look backwards from cursor for @
+  const before = val.slice(0, pos);
+  const atIdx = before.lastIndexOf('@');
+  if (atIdx === -1) return null;
+  // Make sure no space between @ and cursor
+  const fragment = before.slice(atIdx + 1);
+  if (/\s/.test(fragment)) return null;
+  return fragment;
+}
+
+function showMentionDrop(candidates, query) {
+  const drop = document.getElementById('mention-drop');
+  if (!candidates.length) { drop.classList.remove('show'); drop.innerHTML=''; mentionSelIdx=-1; return; }
+  mentionSelIdx = 0;
+  drop.innerHTML = candidates.map((m, i) => {
+    const av = m.userName.charAt(0).toUpperCase();
+    const highlighted = esc(m.userName.slice(0, query.length)) +
+      '<span style="color:var(--tx2);font-weight:400">' + esc(m.userName.slice(query.length)) + '</span>';
+    const hostTag = m.isHost ? '<span class="m-tag">👑</span>' : '';
+    return `<div class="mention-item${i===0?' sel':''}" data-name="${esc(m.userName)}" onmousedown="pickMention('${esc(m.userName)}')">
+      <div class="m-av">${av}</div>
+      <div class="m-nm">${highlighted}${hostTag}</div>
+    </div>`;
+  }).join('');
+  drop.classList.add('show');
+}
+
+function hideMentionDrop() {
+  document.getElementById('mention-drop').classList.remove('show');
+  mentionSelIdx = -1; mentionQuery = null;
+}
+
+function pickMention(name) {
+  const inp = document.getElementById('cinp');
+  const val = inp.value;
+  const pos = inp.selectionStart;
+  const before = val.slice(0, pos);
+  const atIdx = before.lastIndexOf('@');
+  const after = val.slice(pos);
+  inp.value = val.slice(0, atIdx) + '@' + name + ' ' + after;
+  inp.focus();
+  const newPos = atIdx + name.length + 2;
+  inp.setSelectionRange(newPos, newPos);
+  hideMentionDrop();
+}
+
+function onCinpInput(e) {
+  onTyping();
+  const inp = e.target;
+  const q = getCursorMentionQuery(inp);
+  if (q === null) { hideMentionDrop(); return; }
+  mentionQuery = q;
+  showMentionDrop(getMentionCandidates(q), q);
+}
+
+function onCinpKeydown(e) {
+  const drop = document.getElementById('mention-drop');
+  const items = drop.querySelectorAll('.mention-item');
+  if (drop.classList.contains('show') && items.length) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      items[mentionSelIdx]?.classList.remove('sel');
+      mentionSelIdx = (mentionSelIdx + 1) % items.length;
+      items[mentionSelIdx]?.classList.add('sel');
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[mentionSelIdx]?.classList.remove('sel');
+      mentionSelIdx = (mentionSelIdx - 1 + items.length) % items.length;
+      items[mentionSelIdx]?.classList.add('sel');
+      return;
+    }
+    if (e.key === 'Tab' || e.key === 'Enter') {
+      const sel = items[mentionSelIdx];
+      if (sel) { e.preventDefault(); pickMention(sel.dataset.name); return; }
+    }
+    if (e.key === 'Escape') { hideMentionDrop(); return; }
+  }
+  if (e.key === 'Enter') sendChat();
+}
+
 function onTyping() {
   if (!ws||ws.readyState!==WebSocket.OPEN) return;
   if (!isTyping) { isTyping=true; ws.send(JSON.stringify({type:'typing_start'})); }
@@ -770,6 +996,25 @@ function sendChat() {
   if(ws.readyState===WebSocket.OPEN) ws.send(JSON.stringify({type:'typing_stop'}));
 }
 function sendEmoji(e) { if(!ws||ws.readyState!==WebSocket.OPEN) return; ws.send(JSON.stringify({type:'chat',text:e})); addChat(userName,e,true); }
+function renderMentions(txt, isSelf) {
+  // Split on @Name tokens and wrap matching names
+  const allNames = members.map(m => m.userName);
+  // Build regex from known names, longest first to avoid partial matches
+  const sorted = [...allNames].sort((a,b) => b.length - a.length);
+  // Escape text, then replace @Name with styled span
+  let out = esc(txt);
+  sorted.forEach(name => {
+    const escaped = esc(name);
+    const rx = new RegExp('@' + escaped.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+    out = out.replace(rx, `<span class="mention-tag">@${escaped}</span>`);
+  });
+  return out;
+}
+
+function isTaggedMe(txt) {
+  return txt.toLowerCase().includes('@' + userName.toLowerCase());
+}
+
 function addChat(who, txt, self) {
   if (!self) {
     playChatSound();
@@ -777,10 +1022,12 @@ function addChat(who, txt, self) {
   }
   const el = document.getElementById('cmsgs');
   const d = document.createElement('div');
-  d.className = 'cm '+(self?'self':'other');
+  const tagged = !self && isTaggedMe(txt);
+  d.className = 'cm ' + (self ? 'self' : 'other') + (tagged ? ' tagged' : '');
   const ts = new Date();
   const t = ts.getHours().toString().padStart(2,'0')+':'+ts.getMinutes().toString().padStart(2,'0');
-  d.innerHTML = `<div class="cm-meta"><span class="cm-who">${esc(who)}</span><span class="cm-time">${t}</span></div><div class="cm-bub">${esc(txt)}</div>`;
+  const bubHtml = renderMentions(txt, self);
+  d.innerHTML = `<div class="cm-meta"><span class="cm-who">${esc(who)}</span><span class="cm-time">${t}</span></div><div class="cm-bub">${bubHtml}</div>`;
   el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
 function sysMsg(txt) {
@@ -844,6 +1091,25 @@ function requestNotifPermission() {
 }
 
 function notifyChat(who, text) {
+  // Extra ping if tagged
+  if (isTaggedMe(text)) {
+    // Play a second higher note to stand out
+    if (audioCtx) {
+      try {
+        const t = audioCtx.currentTime + 0.1;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(1600, t);
+        o.frequency.exponentialRampToValueAtTime(1200, t + 0.12);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.6, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+        o.start(t); o.stop(t + 0.3);
+      } catch(e) {}
+    }
+  }
   // Browser Notification (when tab not focused)
   if (document.hidden) {
     unreadCount++;
@@ -887,6 +1153,12 @@ document.addEventListener('click', () => {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   requestNotifPermission();
 }, { once: true });
+
+// Close @ dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#cinp') && !e.target.closest('#mention-drop'))
+    hideMentionDrop();
+});
 </script>
 </body>
 </html>
