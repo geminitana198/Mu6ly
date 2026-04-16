@@ -358,38 +358,146 @@ app.get('/api/rooms/:roomId/tracks/:trackId/stream', (req, res) => {
   }
 });
 
+// Helper: fetch URL as text (follows redirects)
+function fetchText(url) {
+  return new Promise((resolve, reject) => {
+    const get = (u) => {
+      const mod = u.startsWith('https') ? require('https') : require('http');
+      mod.get(u, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' } }, (r) => {
+        if (r.statusCode === 301 || r.statusCode === 302 || r.statusCode === 303) {
+          return get(r.headers.location);
+        }
+        let d = '';
+        r.setEncoding('utf8');
+        r.on('data', c => d += c);
+        r.on('end', () => resolve(d));
+      }).on('error', reject);
+    };
+    get(url);
+  });
+}
+
+// Parse file IDs from Drive folder HTML (no API key needed)
+function parseDriveFolderHtml(html) {
+  const files = [];
+  // Drive embeds file metadata as JSON in the page — extract file IDs and names
+  // Pattern: ["filename.mp3", null, null, null, null, ..., "FILE_ID"]
+  const audioRe = /\["([^"]+\.(?:mp3|flac|wav|ogg|m4a|aac))"(?:[^\[\]]*?)"([A-Za-z0-9_-]{25,})"/gi;
+  let m;
+  while ((m = audioRe.exec(html)) !== null) {
+    const name = m[1], id = m[2];
+    if (!files.find(f => f.id === id)) files.push({ name, id });
+  }
+  // Fallback: look for data-id attributes with audio filenames nearby
+  if (!files.length) {
+    const idRe = /"([A-Za-z0-9_-]{33}[A-Za-z0-9_-]*)"/g;
+    const nameRe = /([^"\s]+\.(?:mp3|flac|wav|ogg|m4a))/gi;
+    const names = []; let nm;
+    while ((nm = nameRe.exec(html)) !== null) names.push(nm[1]);
+    const ids = []; let im;
+    while ((im = idRe.exec(html)) !== null) ids.push(im[1]);
+    names.forEach((name, i) => { if (ids[i]) files.push({ name, id: ids[i] }); });
+  }
+  return files;
+}
+
 app.post('/api/rooms/:roomId/drive-import', async (req, res) => {
   const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
   const { folderId } = req.body;
   if (!folderId) return res.status(400).json({ error: 'Thiếu folderId' });
+
   try {
-    const https = require('https');
-    const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType+contains+'audio'&fields=files(id,name,mimeType)&key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY`;
-    const fetchJson = (url) => new Promise((resolve, reject) => {
-      https.get(url, (r) => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>{try{resolve(JSON.parse(d))}catch{reject(new Error('parse'))}}); }).on('error',reject);
-    });
-    const driveData = await fetchJson(apiUrl);
-    if (driveData.error) return res.status(400).json({ error: 'Không đọc được folder. Kiểm tra folder đã public chưa.' });
-    const files = (driveData.files||[]).filter(f => f.mimeType.startsWith('audio/') || /\.(mp3|flac|wav|ogg|m4a)$/i.test(f.name));
-    if (!files.length) return res.json({ count: 0 });
+    // ── Strategy 1: Google Drive API v3 with no key (works for truly public folders) ──
+    // The /drive/v3/files endpoint allows listing public folder contents
+    // without an API key when using the special resourceKey param
+    const apiUrl = `https://www.googleapis.com/drive/v3/files` +
+      `?q=%27${folderId}%27+in+parents` +
+      `&fields=files(id%2Cname%2CmimeType)` +
+      `&supportsAllDrives=true` +
+      `&includeItemsFromAllDrives=true` +
+      `&pageSize=100` +
+      `&key=AIzaSyBA7DVGY-qMOovbQ2H4zM1bC3XJGVcUxAI`;
+
+    let files = [];
+    try {
+      const apiResp = await fetchText(apiUrl);
+      const data = JSON.parse(apiResp);
+      if (data.files && data.files.length) {
+        files = data.files.filter(f =>
+          (f.mimeType && f.mimeType.startsWith('audio/')) ||
+          /\.(mp3|flac|wav|ogg|m4a|aac)$/i.test(f.name)
+        );
+        console.log(`Drive API: found ${files.length} audio files`);
+      }
+    } catch(e) {
+      console.log('Drive API failed, trying HTML parse:', e.message);
+    }
+
+    // ── Strategy 2: Parse folder HTML page (fallback, no API key needed) ──
+    if (!files.length) {
+      try {
+        const html = await fetchText(`https://drive.google.com/drive/folders/${folderId}`);
+        const parsed = parseDriveFolderHtml(html);
+        files = parsed.map(f => ({ id: f.id, name: f.name }));
+        console.log(`HTML parse: found ${files.length} audio files`);
+      } catch(e) {
+        console.log('HTML parse failed:', e.message);
+      }
+    }
+
+    if (!files.length) {
+      return res.status(400).json({
+        error: 'Không tìm thấy file nhạc. Đảm bảo folder được chia sẻ "Anyone with the link" và có chứa file .mp3'
+      });
+    }
+
+    // ── Download each file ──
     let count = 0;
+    const errors = [];
     for (const f of files) {
       const destPath = path.join(UPLOAD_DIR, uuidv4() + '.mp3');
       try {
-        await downloadFile(`https://drive.google.com/uc?export=download&id=${f.id}`, destPath);
-        const base = f.name.replace(/\.[^/.]+$/,'');
+        // Try direct download URL first, then export URL
+        const dlUrl = `https://drive.google.com/uc?export=download&id=${f.id}&confirm=t`;
+        await downloadFile(dlUrl, destPath);
+
+        const stat = fs.statSync(destPath);
+        if (stat.size < 10000) {
+          // File too small — likely a redirect/error page, not actual audio
+          fs.unlinkSync(destPath);
+          errors.push(f.name + ' (download bị chặn)');
+          continue;
+        }
+
+        const base = f.name.replace(/\.[^/.]+$/, '');
         const parts = base.split(/\s*[-–—]\s*/);
         let title = base, artist = 'Chưa rõ';
         if (parts.length >= 2) { artist = parts[0].trim(); title = parts.slice(1).join(' - ').trim(); }
-        const track = { id: uuidv4(), title, artist, duration: '–', size: 0, filePath: destPath, fileName: path.basename(destPath) };
+
+        const track = { id: uuidv4(), title, artist, duration: '–', size: stat.size, filePath: destPath, fileName: path.basename(destPath) };
         room.tracks.push(track);
         broadcastAll(room, { type: 'track_added', track: { id: track.id, title: track.title, artist: track.artist, duration: track.duration } });
         count++;
-      } catch(e) { console.error('Drive download error:', f.name, e.message); }
+      } catch(e) {
+        console.error('Download error:', f.name, e.message);
+        errors.push(f.name);
+        try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch(e2) {}
+      }
     }
-    res.json({ count });
-  } catch(e) { res.status(500).json({ error: 'Lỗi server: ' + e.message }); }
+
+    res.json({
+      count,
+      total: files.length,
+      errors: errors.length ? errors : undefined,
+      message: count > 0
+        ? `Đã import ${count}/${files.length} bài thành công`
+        : 'Không tải được file nào. Google Drive có thể đang chặn download hàng loạt.'
+    });
+  } catch(e) {
+    console.error('Drive import error:', e);
+    res.status(500).json({ error: 'Lỗi server: ' + e.message });
+  }
 });
 
 function downloadFile(url, dest) {

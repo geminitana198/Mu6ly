@@ -756,7 +756,13 @@ async function importDrive() {
     });
     const data = await res.json();
     if (data.error) { toast('❌ '+data.error); return; }
-    toast(`✅ Đã import ${data.count} bài`);
+    if (data.count > 0) {
+      let msg = `✅ ${data.message || 'Đã import ' + data.count + ' bài'}`;
+      if (data.errors && data.errors.length) msg += ` (${data.errors.length} lỗi)`;
+      toast(msg);
+    } else {
+      toast('⚠️ ' + (data.message || data.error || 'Không import được bài nào'));
+    }
     toggleDrive(); document.getElementById('drive-url').value='';
   } catch { toast('❌ Lỗi kết nối server'); }
 }
