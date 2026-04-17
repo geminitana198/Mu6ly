@@ -230,6 +230,146 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
 .toggle input:checked + .tslider{background:var(--ac)}
 .toggle input:checked + .tslider:before{transform:translateX(16px);background:#fff}
 
+
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE  (≤ 640px)
+═══════════════════════════════════════════ */
+@media (max-width: 640px) {
+
+  /* LOBBY — full screen card */
+  #lobby { padding: 1rem; align-items: flex-start; padding-top: 2rem; }
+  .lcard { max-width: 100%; border-radius: var(--r); }
+  .lhead { padding: 1.25rem 1rem; }
+  .llogo { font-size: 22px; }
+  .lbody { padding: 1rem; gap: 10px; }
+  .lf input { font-size: 16px; } /* prevent iOS zoom */
+  .room-list { max-height: 160px; }
+
+  /* APP — stack vertically */
+  #app { position: fixed; inset: 0; display: none; flex-direction: column; }
+
+  /* NAV — compact */
+  nav { padding: 0 .875rem; height: 48px; }
+  .logo { font-size: 16px; }
+  .room-nm { max-width: 100px; font-size: 12px; }
+  .pill { display: none; } /* hide listener count — shown in tab */
+  .host-pill { padding: 2px 6px; font-size: 9px; }
+  .open-pill { display: none; }
+  .del-room-btn { display: none !important; } /* moved to settings tab */
+  .leave-btn { padding: 4px 10px; font-size: 11px; }
+
+  /* HOST CONTROL BAR — compact */
+  .hcbar { padding: 5px .875rem; gap: 8px; flex-wrap: wrap; }
+  .hcbar-label { font-size: 11px; }
+  .toggle-wrap { font-size: 11px; gap: 6px; }
+  #reclaim-bar { padding: 5px .875rem; }
+  #reclaim-bar span { font-size: 11px; }
+
+  /* LAYOUT — hide desktop panels, show mobile tabs */
+  .layout { position: relative; flex: 1; overflow: hidden; }
+  .tpanel { position: absolute; inset: 0; display: none; flex-direction: column; }
+  .tpanel.mob-active { display: flex; }
+  .cpanel { position: absolute; inset: 0; width: 100%; border-left: none; display: none; flex-direction: column; }
+  .cpanel.mob-active { display: flex; }
+
+  /* TRACK PANEL mobile */
+  .tphd { padding: .75rem .875rem .625rem; }
+  .tphd h2 { font-size: 14px; }
+  .hact { gap: 5px; }
+  .ubtn { padding: 5px 9px; font-size: 11px; }
+  .tl { padding: .375rem .5rem; }
+  .ti { padding: 7px 8px; gap: 8px; }
+  .tth { width: 32px; height: 32px; }
+  .ttl { font-size: 12px; }
+  .tar { font-size: 11px; }
+  .tdur { font-size: 10px; }
+
+  /* CHAT mobile */
+  .chd { padding: .625rem .875rem; }
+  .cmsgs { padding: .625rem .75rem; }
+  .cm-bub { font-size: 12px; max-width: 190px; }
+  .cinp-wrap { padding: .375rem .75rem .5rem; }
+  .cinp { font-size: 14px; } /* prevent iOS zoom */
+  .emobar { padding: 4px .75rem; gap: 2px; }
+  .emobtn { font-size: 16px; padding: 2px 3px; }
+  .mpanel { max-height: 150px; }
+
+  /* PLAYER BAR — mobile compact, 2 rows */
+  .pbar {
+    height: auto;
+    padding: 6px .875rem 6px;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-top: 1px solid var(--bd);
+    flex-shrink: 0;
+  }
+  .np { width: 100%; order: 1; gap: 8px; }
+  .npimg { width: 34px; height: 34px; font-size: 14px; }
+  .nptl { font-size: 12px; }
+  .npar { font-size: 11px; }
+  .pctr { order: 2; flex: 1; gap: 4px; min-width: 0; }
+  .ctrls { gap: 10px; }
+  .cb { font-size: 13px; }
+  .ppb { width: 32px; height: 32px; font-size: 13px; }
+  .ptm { font-size: 10px; min-width: 28px; }
+  .pvol { order: 3; width: auto; gap: 5px; }
+  input[type=range].vs { width: 55px; }
+
+  /* MOBILE BOTTOM NAV */
+  .mob-nav {
+    display: flex;
+    background: var(--bg2);
+    border-top: 1px solid var(--bd);
+    flex-shrink: 0;
+    z-index: 60;
+  }
+  .mob-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--tx3);
+    font-size: 10px;
+    gap: 2px;
+    transition: color .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .mob-tab.on { color: var(--ac2); }
+  .mob-tab .mtico { font-size: 18px; line-height: 1; }
+  .mob-badge {
+    position: absolute;
+    top: 2px; right: calc(50% - 14px);
+    background: var(--red);
+    color: #fff;
+    font-size: 9px;
+    min-width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 3px;
+    display: none;
+  }
+  .mob-tab { position: relative; }
+
+  /* drive panel compact */
+  .drive-panel { padding: .625rem .875rem; }
+  .drive-row { gap: 5px; }
+  .drive-inp { font-size: 12px; padding: 6px 8px; }
+  .drive-go { padding: 6px 10px; font-size: 11px; }
+}
+
+/* Desktop — hide mobile-only elements */
+@media (min-width: 641px) {
+  .mob-nav { display: none !important; }
+  .tpanel { display: flex !important; }
+  .cpanel { display: flex !important; }
+}
+
 /* toast */
 .toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);padding:8px 16px;font-size:13px;color:var(--tx);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -295,13 +435,24 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
   </div>
   <div class="hcbar" id="hcbar">
     <span class="hcbar-label">👑 Quyền chủ phòng</span>
-    <label class="toggle-wrap">
-      <span>Cho thành viên điều khiển nhạc</span>
-      <label class="toggle">
-        <input type="checkbox" id="open-ctrl-toggle" onchange="setOpenControls(this.checked)" />
-        <span class="tslider"></span>
+    <div style="display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap;flex:1">
+      <label class="toggle-wrap">
+        <span>Thành viên điều khiển nhạc</span>
+        <label class="toggle">
+          <input type="checkbox" id="open-ctrl-toggle" onchange="setOpenControls(this.checked)" />
+          <span class="tslider"></span>
+        </label>
       </label>
-    </label>
+      <label class="toggle-wrap">
+        <span>Thành viên upload nhạc</span>
+        <label class="toggle">
+          <input type="checkbox" id="open-upload-toggle" onchange="setOpenUpload(this.checked)" />
+          <span class="tslider"></span>
+        </label>
+      </label>
+    </div>
+    <!-- mobile: show delete room in hcbar since nav button is hidden -->
+    <button id="del-room-btn-mob" onclick="deleteRoom()" style="display:none;background:none;border:1px solid rgba(226,75,74,.4);padding:4px 10px;border-radius:var(--rs);font-size:11px;color:#f09595;cursor:pointer;white-space:nowrap;flex-shrink:0">🗑 Xóa phòng</button>
   </div>
 
   <div class="layout">
@@ -315,6 +466,13 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
             <input type="file" accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a" multiple onchange="uploadTracks(this.files)" />
           </label>
           <button class="ubtn" onclick="toggleDrive()">☁️ Drive</button>
+        </div>
+        <!-- member upload button — shown when openUpload=true and not host -->
+        <div id="member-upload-btn" style="display:none">
+          <label class="ubtn" style="background:rgba(29,158,117,.12);border-color:rgba(29,158,117,.3);color:#5DCAA5">
+            <span>+ Upload</span>
+            <input type="file" accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a" multiple onchange="uploadTracks(this.files)" />
+          </label>
         </div>
       </div>
 
@@ -399,6 +557,22 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
       <input type="range" class="vs" id="vol-sl" min="0" max="100" value="80" oninput="setVol(this.value)" />
     </div>
   </div>
+  <!-- MOBILE BOTTOM NAV -->
+  <div class="mob-nav" id="mob-nav">
+    <button class="mob-tab on" id="mtab-tracks" onclick="mobTab('tracks',this)">
+      <span class="mtico">🎵</span>
+      <span>Nhạc</span>
+    </button>
+    <button class="mob-tab" id="mtab-chat" onclick="mobTab('chat',this)">
+      <span class="mtico">💬</span>
+      <span>Chat</span>
+      <span class="mob-badge" id="mob-chat-badge"></span>
+    </button>
+    <button class="mob-tab" id="mtab-members" onclick="mobTab('members',this)">
+      <span class="mtico">👥</span>
+      <span>Thành viên</span>
+    </button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -414,6 +588,7 @@ let roomId = null, roomName = null;
 let userId = null, userName = null;
 let isHost = false;
 let openControls = false;
+let openUpload = false;
 let originalHostName = null; // room creator, can always reclaim
 let tracks = [], members = [];
 let cur = -1, playing = false, shuf = false, rep = false;
@@ -526,6 +701,7 @@ function handleMsg(msg) {
       userId = msg.userId;
       tracks = msg.room.tracks;
       openControls = msg.room.openControls;
+      openUpload = msg.room.openUpload || false;
       originalHostName = msg.room.originalHostName || null;
       members = msg.room.members || [];
       isHost = msg.room.hostName === msg.userName;
@@ -615,8 +791,14 @@ function handleMsg(msg) {
     case 'controls_changed':
       openControls = msg.openControls;
       updateControlsUI();
-      render(); // re-render track list so onclick handlers update
+      render();
       sysMsg(openControls ? '🎛 Chủ phòng đã mở quyền điều khiển cho mọi người' : '🔒 Chủ phòng đã khoá quyền điều khiển');
+      break;
+
+    case 'upload_changed':
+      openUpload = msg.openUpload;
+      updateHostUI();
+      sysMsg(openUpload ? '📁 Chủ phòng đã cho phép mọi người upload nhạc' : '🔒 Chủ phòng đã tắt quyền upload');
       break;
 
     case 'user_joined':
@@ -663,6 +845,7 @@ function showApp(room) {
   renderMembers();
   render();
   sysMsg(`Bạn đã vào phòng với tên "${userName}"`);
+  mobInitLayout();
 }
 
 function updateHostUI() {
@@ -671,13 +854,22 @@ function updateHostUI() {
   document.getElementById('hact').style.display = isHost ? 'flex' : 'none';
   const delRoomBtn = document.getElementById('del-room-btn');
   if (delRoomBtn) delRoomBtn.style.display = isHost ? 'inline' : 'none';
-  if (isHost) document.getElementById('open-ctrl-toggle').checked = openControls;
+  // Mobile-specific delete button inside hcbar
+  const delRoomMob = document.getElementById('del-room-btn-mob');
+  if (delRoomMob) delRoomMob.style.display = (isHost && IS_MOBILE()) ? 'inline' : 'none';
+  if (isHost) {
+    document.getElementById('open-ctrl-toggle').checked = openControls;
+    document.getElementById('open-upload-toggle').checked = openUpload;
+  }
   // Show reclaim bar when I'm originalHost but not currentHost
   const reclaimBar = document.getElementById('reclaim-bar');
   if (reclaimBar) {
     const showReclaim = !isHost && userName === originalHostName;
     reclaimBar.style.display = showReclaim ? 'flex' : 'none';
   }
+  // Member upload button — show when openUpload=true and not host
+  const memUp = document.getElementById('member-upload-btn');
+  if (memUp) memUp.style.display = (!isHost && openUpload) ? 'flex' : 'none';
   updateControlsUI();
 }
 
@@ -699,7 +891,7 @@ function showLobby(msg) {
   aud.pause(); aud.src = ''; playing = false;
   // Reset state
   tracks = []; cur = -1; members = []; npCard = null;
-  roomId = null; roomName = null; isHost = false; openControls = false; originalHostName = null;
+  roomId = null; roomName = null; isHost = false; openControls = false; openUpload = false; originalHostName = null;
   selectedRoomName = null;
   // Clear chat
   document.getElementById('cmsgs').innerHTML = '';
@@ -707,6 +899,12 @@ function showLobby(msg) {
   // Switch views
   document.getElementById('app').style.display = 'none';
   document.getElementById('lobby').style.display = 'flex';
+  // Reset mobile panel state
+  const tpanel = document.querySelector('.tpanel');
+  const cpanel = document.querySelector('.cpanel');
+  if (tpanel) tpanel.classList.remove('mob-active');
+  if (cpanel) cpanel.classList.remove('mob-active');
+  mobUnread = 0;
   // Show message + switch to join tab
   if (msg) {
     const tabs = document.querySelectorAll('.ltab');
@@ -725,6 +923,11 @@ function deleteRoom() {
 function setOpenControls(val) {
   if (!ws) return;
   ws.send(JSON.stringify({type:'set_open_controls', open: val}));
+}
+
+function setOpenUpload(val) {
+  if (!ws) return;
+  ws.send(JSON.stringify({type:'set_open_upload', open: val}));
 }
 
 // ── MEMBERS ────────────────────────────────────────────
@@ -815,6 +1018,7 @@ async function uploadTracks(files) {
     if (parts.length>=2){ artist=parts[0].trim(); title=parts.slice(1).join(' - ').trim(); }
     const fd = new FormData();
     fd.append('file',f); fd.append('title',title); fd.append('artist',artist);
+    fd.append('uploaderName', userName || '');
     try { await fetch(`/api/rooms/${roomId}/tracks`, {method:'POST',body:fd}); }
     catch { toast('Lỗi upload: '+f.name); }
   }
@@ -1132,6 +1336,7 @@ function addChat(who, txt, self) {
   if (!self) {
     playChatSound();
     notifyChat(who, txt);
+    mobChatNotify();
   }
   const el = document.getElementById('cmsgs');
   const d = document.createElement('div');
@@ -1159,6 +1364,63 @@ function updateTyping() {
 }
 
 // ── UTILS ──────────────────────────────────────────────
+
+// ── MOBILE TAB NAVIGATION ──────────────────────────────
+let mobUnread = 0;
+const IS_MOBILE = () => window.innerWidth <= 640;
+
+function mobTab(id, el) {
+  if (!IS_MOBILE()) return;
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  const tpanel = document.querySelector('.tpanel');
+  const cpanel = document.querySelector('.cpanel');
+  if (id === 'tracks') {
+    tpanel.classList.add('mob-active');
+    cpanel.classList.remove('mob-active');
+  } else if (id === 'chat') {
+    tpanel.classList.remove('mob-active');
+    cpanel.classList.add('mob-active');
+    mobUnread = 0;
+    const badge = document.getElementById('mob-chat-badge');
+    if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
+  } else if (id === 'members') {
+    tpanel.classList.remove('mob-active');
+    cpanel.classList.add('mob-active');
+    if (!membersOpen) {
+      membersOpen = true;
+      document.getElementById('mlist').style.display = 'block';
+      const arr = document.getElementById('m-arrow');
+      if (arr) arr.textContent = '▾';
+    }
+  }
+}
+
+function mobInitLayout() {
+  if (!IS_MOBILE()) return;
+  const tpanel = document.querySelector('.tpanel');
+  const cpanel = document.querySelector('.cpanel');
+  if (tpanel) tpanel.classList.add('mob-active');
+  if (cpanel) cpanel.classList.remove('mob-active');
+  const firstTab = document.getElementById('mtab-tracks');
+  if (firstTab) {
+    document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('on'));
+    firstTab.classList.add('on');
+  }
+}
+
+function mobChatNotify() {
+  if (!IS_MOBILE()) return;
+  const activeTab = document.querySelector('.mob-tab.on');
+  if (activeTab && activeTab.id === 'mtab-chat') return;
+  mobUnread++;
+  const badge = document.getElementById('mob-chat-badge');
+  if (badge) {
+    badge.style.display = 'flex';
+    badge.textContent = mobUnread > 9 ? '9+' : mobUnread;
+  }
+}
+
 // ── CHAT NOTIFICATION SOUND + BROWSER NOTIFICATION ───
 const audioCtx = typeof AudioContext !== 'undefined' ? new AudioContext() : null;
 

@@ -31,6 +31,7 @@ function createRoom(name, pass) {
     hostName: null,           // userName of current host
     originalHostName: null,   // set once on first join, used for reclaim
     openControls: false,
+    openUpload: false,
     tracks: [],
     state: { trackIdx: 0, position: 0, playing: false, updatedAt: Date.now() },
     clients: new Set()
@@ -60,6 +61,7 @@ function roomPublicInfo(room) {
     hostName: room.hostName,
     originalHostName: room.originalHostName,
     openControls: room.openControls,
+    openUpload: room.openUpload,
     tracks: room.tracks.map(t => ({ id: t.id, title: t.title, artist: t.artist, duration: t.duration })),
     state: room.state,
     listeners: room.clients.size,
@@ -208,6 +210,13 @@ wss.on('connection', (ws) => {
         break;
       }
 
+      case 'set_open_upload': {
+        if (!room || !amHost()) { ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng mới có thể thay đổi quyền upload.' })); return; }
+        room.openUpload = !!msg.open;
+        broadcastAll(room, { type: 'upload_changed', openUpload: room.openUpload });
+        break;
+      }
+
       // ── CHAT ──────────────────────────────────────────
       case 'chat': {
         if (!room) return;
@@ -342,6 +351,12 @@ app.get('/api/rooms/:roomId', (req, res) => {
 app.post('/api/rooms/:roomId/tracks', upload.single('file'), (req, res) => {
   const room = getRoomById(req.params.roomId);
   if (!room) return res.status(404).json({ error: 'Phòng không tồn tại' });
+  // Check upload permission: host or openUpload
+  const uploaderName = req.body.uploaderName || '';
+  const isRoomHost = room.hostName === uploaderName;
+  if (!isRoomHost && !room.openUpload) {
+    return res.status(403).json({ error: 'Bạn không có quyền upload nhạc.' });
+  }
   const track = {
     id: uuidv4(),
     title: req.body.title || req.file.originalname.replace(/\.[^/.]+$/, ''),
