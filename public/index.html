@@ -289,6 +289,10 @@ input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;he
   </nav>
 
   <!-- HOST CONTROL BAR -->
+  <div class="hcbar" id="reclaim-bar" style="display:none;background:rgba(127,119,221,.07);border-bottom:1px solid var(--bd2);padding:5px 1.25rem;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0">
+    <span style="font-size:12px;color:var(--tx2)">Bạn là chủ phòng gốc — quyền đang được trao cho người khác</span>
+    <button onclick="reclaimHost()" style="background:var(--ac);border:none;border-radius:var(--rs);padding:4px 14px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap">Lấy lại quyền</button>
+  </div>
   <div class="hcbar" id="hcbar">
     <span class="hcbar-label">👑 Quyền chủ phòng</span>
     <label class="toggle-wrap">
@@ -410,6 +414,7 @@ let roomId = null, roomName = null;
 let userId = null, userName = null;
 let isHost = false;
 let openControls = false;
+let originalHostName = null; // room creator, can always reclaim
 let tracks = [], members = [];
 let cur = -1, playing = false, shuf = false, rep = false;
 let lastVol = 80, muted = false;
@@ -521,6 +526,7 @@ function handleMsg(msg) {
       userId = msg.userId;
       tracks = msg.room.tracks;
       openControls = msg.room.openControls;
+      originalHostName = msg.room.originalHostName || null;
       members = msg.room.members || [];
       isHost = msg.room.hostName === msg.userName;
       showApp(msg.room);
@@ -590,6 +596,7 @@ function handleMsg(msg) {
 
     case 'host_changed':
       isHost = msg.newHost === userName;
+      if (msg.originalHostName) originalHostName = msg.originalHostName;
       members = msg.members || members;
       if (msg.reason) sysMsg('👑 ' + msg.reason);
       else sysMsg(`👑 ${msg.newHost} là chủ phòng mới`);
@@ -664,6 +671,12 @@ function updateHostUI() {
   const delRoomBtn = document.getElementById('del-room-btn');
   if (delRoomBtn) delRoomBtn.style.display = isHost ? 'inline' : 'none';
   if (isHost) document.getElementById('open-ctrl-toggle').checked = openControls;
+  // Show reclaim bar when I'm originalHost but not currentHost
+  const reclaimBar = document.getElementById('reclaim-bar');
+  if (reclaimBar) {
+    const showReclaim = !isHost && userName === originalHostName;
+    reclaimBar.style.display = showReclaim ? 'flex' : 'none';
+  }
   updateControlsUI();
 }
 
@@ -685,7 +698,7 @@ function showLobby(msg) {
   aud.pause(); aud.src = ''; playing = false;
   // Reset state
   tracks = []; cur = -1; members = []; npCard = null;
-  roomId = null; roomName = null; isHost = false; openControls = false;
+  roomId = null; roomName = null; isHost = false; openControls = false; originalHostName = null;
   selectedRoomName = null;
   // Clear chat
   document.getElementById('cmsgs').innerHTML = '';
@@ -724,11 +737,18 @@ function toggleMembers() {
 function renderMembers() {
   const el = document.getElementById('mlist');
   if (!members.length) { el.innerHTML = ''; return; }
+  // Can I reclaim? I'm originalHost but not current host
+  const canReclaim = !isHost && userName === originalHostName;
   el.innerHTML = members.map(m => {
     const isMe = m.userName === userName;
-    const actBtns = isHost && !isMe && !m.isHost
-      ? `<div class="m-actions"><button class="m-actbtn" onclick="transferHost('${esc(m.userName)}')">Trao quyền</button></div>`
-      : '';
+    let actBtns = '';
+    if (isMe && canReclaim) {
+      // Show reclaim button next to my own name
+      actBtns = `<div class="m-actions" style="opacity:1"><button class="m-actbtn" style="border-color:rgba(127,119,221,.4);color:var(--ac2)" onclick="reclaimHost()">Lấy lại quyền</button></div>`;
+    } else if (isHost && !isMe && !m.isHost) {
+      // Current host can transfer to others
+      actBtns = `<div class="m-actions"><button class="m-actbtn" onclick="transferHost('${esc(m.userName)}')">Trao quyền</button></div>`;
+    }
     return `<div class="mitem">
       <div class="m-dot"></div>
       <div class="m-name">${esc(m.userName)}${isMe ? ' <span style="font-size:10px;color:var(--tx3)">(bạn)</span>' : ''}</div>
@@ -741,6 +761,11 @@ function renderMembers() {
 function transferHost(targetName) {
   if (!confirm(`Chuyển quyền chủ phòng cho "${targetName}"?`)) return;
   ws.send(JSON.stringify({type:'transfer_host', targetUserName: targetName}));
+}
+
+function reclaimHost() {
+  if (!confirm('Lấy lại quyền chủ phòng?')) return;
+  ws.send(JSON.stringify({type:'reclaim_host'}));
 }
 
 // ── UPLOAD ─────────────────────────────────────────────

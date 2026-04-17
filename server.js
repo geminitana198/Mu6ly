@@ -58,6 +58,7 @@ function roomPublicInfo(room) {
   return {
     id: room.id, name: room.name,
     hostName: room.hostName,
+    originalHostName: room.originalHostName,
     openControls: room.openControls,
     tracks: room.tracks.map(t => ({ id: t.id, title: t.title, artist: t.artist, duration: t.duration })),
     state: room.state,
@@ -172,15 +173,31 @@ wss.on('connection', (ws) => {
 
       // ── HOST ACTIONS ──────────────────────────────────
       case 'transfer_host': {
-        // Only current host can transfer
         if (!room || !amHost()) { ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng mới có thể chuyển quyền.' })); return; }
         const targetName = msg.targetUserName;
-        // Verify target is in room
         let targetExists = false;
         room.clients.forEach(w => { const i = wsInfo.get(w); if (i && i.userName === targetName) targetExists = true; });
         if (!targetExists) { ws.send(JSON.stringify({ type: 'error', message: 'Người dùng không có trong phòng.' })); return; }
         room.hostName = targetName;
         broadcastAll(room, { type: 'host_changed', newHost: targetName, members: roomPublicInfo(room).members });
+        break;
+      }
+
+      case 'reclaim_host': {
+        // Only the original host (room creator) can reclaim at any time
+        if (!room) return;
+        if (userName !== room.originalHostName) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Chỉ chủ phòng gốc mới có thể lấy lại quyền.' }));
+          return;
+        }
+        if (room.hostName === userName) return; // already host
+        room.hostName = userName;
+        broadcastAll(room, {
+          type: 'host_changed',
+          newHost: userName,
+          members: roomPublicInfo(room).members,
+          reason: `👑 ${userName} đã lấy lại quyền chủ phòng`
+        });
         break;
       }
 
