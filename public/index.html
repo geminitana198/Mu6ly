@@ -567,21 +567,25 @@ function handleMsg(msg) {
     }
 
     case 'play':
-      if (!isHost) applyState(msg.state, false);
+      // Apply to everyone who didn't trigger this (server excludes sender)
+      applyState(msg.state, false);
       break;
     case 'pause':
-      if (!isHost) { aud.pause(); playing=false; syncUI(); }
+      aud.pause(); playing=false; syncUI();
       break;
     case 'seek':
-      if (!isHost) aud.currentTime = msg.position;
+      aud.currentTime = msg.position;
       break;
     case 'next_track':
-      if (!isHost) applyState(msg.state, true);
+      // Apply to everyone who didn't trigger this (server excludes sender)
+      applyState(msg.state, true);
       if (msg.state && tracks[msg.state.trackIdx])
         updateNPC(tracks[msg.state.trackIdx].title, tracks[msg.state.trackIdx].artist);
       break;
     case 'sync':
-      if (!isHost) applyState(msg.state, false);
+      // Only apply sync if we're not the one currently controlling
+      // (canControl users manage their own state; passive listeners always sync)
+      if (!canControl()) applyState(msg.state, false);
       break;
 
     case 'host_changed':
@@ -850,8 +854,9 @@ aud.addEventListener('timeupdate', ()=>{
   document.getElementById('pf').style.width = p+'%';
   document.getElementById('ct').textContent = fmt(aud.currentTime);
   document.getElementById('dt').textContent = fmt(aud.duration);
-  if (isHost && playing && Math.round(aud.currentTime)%5===0 && Math.round(aud.currentTime)!==0)
-    ws.send(JSON.stringify({type:'sync', state:{trackIdx:cur, position:aud.currentTime, playing, updatedAt:Date.now()}}));
+  if (canControl() && playing && Math.round(aud.currentTime)%5===0 && Math.round(aud.currentTime)!==0)
+    if (ws && ws.readyState === WebSocket.OPEN)
+      ws.send(JSON.stringify({type:'sync', state:{trackIdx:cur, position:aud.currentTime, playing, updatedAt:Date.now()}}));
 });
 
 aud.addEventListener('loadedmetadata', ()=>{
