@@ -602,6 +602,7 @@ function handleMsg(msg) {
       else sysMsg(`👑 ${msg.newHost} là chủ phòng mới`);
       updateHostUI();
       renderMembers();
+      render(); // re-render track list so onclick handlers reflect new host status
       break;
 
     case 'room_deleted':
