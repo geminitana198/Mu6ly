@@ -603,6 +603,7 @@ function handleMsg(msg) {
     case 'controls_changed':
       openControls = msg.openControls;
       updateControlsUI();
+      render(); // re-render track list so onclick handlers update
       sysMsg(openControls ? '🎛 Chủ phòng đã mở quyền điều khiển cho mọi người' : '🔒 Chủ phòng đã khoá quyền điều khiển');
       break;
 
@@ -808,11 +809,13 @@ function togPlay() {
   if (cur<0) { if(tracks.length) hostPlay(0); return; }
   if (playing) {
     aud.pause(); playing=false;
-    ws.send(JSON.stringify({type:'pause', position:aud.currentTime}));
+    if (ws && ws.readyState === WebSocket.OPEN)
+      ws.send(JSON.stringify({type:'pause', position:aud.currentTime}));
   } else {
     aud.play().catch(()=>{});
     playing=true;
-    ws.send(JSON.stringify({type:'play', position:aud.currentTime, trackIdx:cur}));
+    if (ws && ws.readyState === WebSocket.OPEN)
+      ws.send(JSON.stringify({type:'play', position:aud.currentTime, trackIdx:cur}));
   }
   syncUI();
 }
@@ -820,11 +823,16 @@ function togPlay() {
 function hostPlay(idx) {
   if (!canControl()) { toast('Bạn không có quyền điều khiển nhạc'); return; }
   loadTrack(idx, true);
-  ws.send(JSON.stringify({type:'next_track', trackIdx:idx}));
+  if (ws && ws.readyState === WebSocket.OPEN)
+    ws.send(JSON.stringify({type:'next_track', trackIdx:idx}));
   if (tracks[idx]) updateNPC(tracks[idx].title, tracks[idx].artist);
 }
 
-function prevT() { if(cur>0 && canControl()) hostPlay(cur-1); }
+function prevT() {
+  if (!canControl()) return;
+  if (cur > 0) hostPlay(cur-1);
+  else if (tracks.length > 0) hostPlay(tracks.length - 1);
+}
 function nextT() {
   if (!canControl()) { toast('Bạn không có quyền điều khiển nhạc'); return; }
   if (!tracks.length) return;
@@ -855,14 +863,21 @@ function seekTo(e) {
   const r = e.currentTarget.getBoundingClientRect();
   const pos = (e.clientX-r.left)/r.width*aud.duration;
   aud.currentTime = pos;
-  ws.send(JSON.stringify({type:'seek', position:pos}));
+  if (ws && ws.readyState === WebSocket.OPEN)
+    ws.send(JSON.stringify({type:'seek', position:pos}));
 }
 
+let _lastCanControl = false;
 function syncUI() {
   document.getElementById('ppb').textContent = playing ? '⏸' : '▶';
   if (cur>=0 && tracks[cur]) {
     document.getElementById('nptl').textContent = tracks[cur].title;
     document.getElementById('npar').textContent = tracks[cur].artist;
+  }
+  const nowCanControl = canControl();
+  if (nowCanControl !== _lastCanControl) {
+    _lastCanControl = nowCanControl;
+    render(); // re-render track list onclick handlers when permission changes
   }
   updateControlsUI();
 }
